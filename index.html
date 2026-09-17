@@ -17,30 +17,37 @@
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  html, body { background: var(--page-bg); }
+  html, body { height: 100%; background: var(--page-bg); }
   body {
     margin: 0; color: var(--ink); font-family: var(--font-body);
     -webkit-font-smoothing: antialiased; line-height: 1.5;
+    overflow: hidden; /* the app shell owns scrolling; detail list scrolls within */
   }
   .material-symbols-outlined {
     font-family: 'Material Symbols Outlined'; font-weight: normal; font-size: 24px; line-height: 1;
     display: inline-block; vertical-align: middle; -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1080px; margin: 0 auto; padding-block: 40px 64px; padding-left: 20px; padding-right: 20px; }
+  .wrap {
+    max-width: 1080px; margin: 0 auto; padding-block: 22px 14px; padding-left: 20px; padding-right: 20px;
+    height: 100%; display: flex; flex-direction: column; min-height: 0;
+  }
 
   /* ── Header ─────────────────────────────────────────────────────────────── */
+  header { flex-shrink: 0; }
   .eyebrow {
     font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.14em;
-    text-transform: uppercase; color: var(--ext-accent); margin: 0 0 8px;
+    text-transform: uppercase; color: var(--ext-accent); margin: 0 0 6px;
   }
   h1.title {
-    font-family: var(--font-display); font-weight: 700; font-size: 34px; line-height: 1.12;
-    margin: 0 0 12px; color: var(--ink); text-wrap: balance;
+    font-family: var(--font-display); font-weight: 700; font-size: 27px; line-height: 1.12;
+    margin: 0 0 8px; color: var(--ink); text-wrap: balance;
   }
-  .lede { font-size: 15px; line-height: 22px; color: var(--ink-soft); max-width: 64ch; margin: 0; }
+  .lede { font-size: 14px; line-height: 20px; color: var(--ink-soft); max-width: 68ch; margin: 0; }
 
   /* ── Section scaffolding ────────────────────────────────────────────────── */
-  .section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin: 40px 0 16px; }
+  .pick-section { flex-shrink: 0; }
+  .detail-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin: 22px 0 14px; }
   .section-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: var(--ink); margin: 0; }
   .section-hint { font-size: 13px; color: var(--ink-soft); }
   .section-head .spacer { flex: 1; }
@@ -59,9 +66,10 @@
   }
 
   /* ── Picker ─────────────────────────────────────────────────────────────── */
-  .seg-group { margin-bottom: 22px; }
+  .seg-group { margin-bottom: 14px; }
+  .seg-group:last-child { margin-bottom: 0; }
   .seg-heading {
-    display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+    display: flex; align-items: center; gap: 8px; margin: 0 0 9px;
     font-family: var(--font-display); font-weight: 700; font-size: 11.5px; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--ink-soft);
   }
@@ -70,10 +78,10 @@
   .seg-dot.leave-managers { background: var(--int-accent); }
   .seg-dot.support { background: var(--sup-accent); }
 
-  .pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 10px; }
   .pick-card {
     position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: center;
-    border-radius: 14px; padding: 14px 12px 14px; text-align: center;
+    border-radius: 14px; padding: 10px 10px 11px; text-align: center;
     transition: transform .16s ease, box-shadow .18s ease, border-color .16s ease, background .16s ease;
   }
   .pick-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(9,30,66,0.12); }
@@ -96,12 +104,15 @@
   .pick-card.selected.leave-managers .pick-check { background: var(--int-accent); border-color: var(--int-accent); }
   .pick-card.selected.support .pick-check { background: var(--sup-accent); border-color: var(--sup-accent); }
 
-  .pick-art { width: 100%; height: 92px; display: flex; align-items: flex-start; justify-content: center; overflow: hidden; margin-bottom: 8px; }
-  .pick-art img { width: auto; height: 148%; display: block; }
-  .pick-name { font-family: var(--font-display); font-weight: 700; font-size: 14px; line-height: 1.22; color: var(--ink); }
+  .pick-art { width: 100%; height: 70px; display: flex; align-items: flex-start; justify-content: center; overflow: hidden; margin-bottom: 6px; }
+  .pick-art img { width: auto; height: 150%; display: block; }
+  .pick-name { font-family: var(--font-display); font-weight: 700; font-size: 13px; line-height: 1.2; color: var(--ink); }
 
   /* ── Detail cards ───────────────────────────────────────────────────────── */
-  .detail-list { display: flex; flex-direction: column; gap: 20px; }
+  .detail-list {
+    display: flex; flex-direction: column; gap: 18px;
+    flex: 1; min-height: 0; overflow-y: auto; padding: 2px 4px 4px 0;
+  }
   .empty {
     border: 1.5px dashed var(--line); border-radius: 16px; padding: 44px 24px; text-align: center;
     color: var(--ink-soft); background: #fff;
@@ -181,8 +192,16 @@
 
   .foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-soft); }
 
+  /* On short or narrow viewports, drop the fixed shell and let the page scroll
+     naturally so the picker never gets crushed. */
+  @media (max-width: 720px), (max-height: 640px) {
+    body { overflow: auto; }
+    .wrap { height: auto; min-height: 100%; display: block; }
+    .detail-section { display: block; }
+    .detail-list { overflow: visible; }
+  }
   @media (max-width: 720px) {
-    h1.title { font-size: 27px; }
+    h1.title { font-size: 24px; }
     .detail-card { flex-direction: column; }
     .detail-aside { flex-basis: auto; flex-direction: row; align-items: flex-end; gap: 16px; padding: 16px 20px; }
     .detail-aside .detail-name { margin: 0; }
@@ -203,7 +222,7 @@
     <p class="lede">Seven people our leave &amp; accommodation product is built for, across three segments. Pick the personas you want to learn about to see who they are, the jobs they're trying to get done, and what the research says about them.</p>
   </header>
 
-  <section aria-labelledby="pick-title">
+  <section class="pick-section" aria-labelledby="pick-title">
     <div class="section-head">
       <h2 class="section-title" id="pick-title">Select personas to explore</h2>
       <span class="spacer"></span>
@@ -214,15 +233,13 @@
     <div id="picker"></div>
   </section>
 
-  <section aria-labelledby="detail-title">
+  <section class="detail-section" aria-labelledby="detail-title">
     <div class="section-head">
       <h2 class="section-title" id="detail-title">What you'll learn</h2>
       <span class="section-hint">Jobs to be done &amp; the latest insights</span>
     </div>
     <div class="detail-list" id="detail"></div>
   </section>
-
-  <p class="foot">A reference resource. Your selections are remembered in this browser only.</p>
 </div>
 
 <script>
@@ -308,7 +325,7 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
   var LS_KEY = 'personaResource:v1';
   function loadSel() {
     try { var raw = localStorage.getItem(LS_KEY); if (raw) { var a = JSON.parse(raw); if (Array.isArray(a)) return a; } } catch (e) {}
-    return ['exp', 'casemgr']; // sensible default so the page shows content at rest
+    return []; // start with none selected
   }
   var selected = new Set(loadSel().filter(byId));
   function saveSel() { try { localStorage.setItem(LS_KEY, JSON.stringify(Array.from(selected))); } catch (e) {} }
