@@ -1,672 +1,232 @@
-<title>Persona Widget</title>
-<meta name="description" content="Standalone preview of the AbsenceSoft Jira persona panel">
+<title>Product Personas</title>
+<meta name="description" content="A browsable reference to AbsenceSoft's seven product personas — select who you want to learn about.">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 <style>
-  /* ── Page ground (standalone shell around the ported widget) ───────────── */
   :root {
-    --page-bg: #EEF1F4;
-    --page-panel: #FFFFFF;
-    --page-ink: #172B4D;
-    --page-ink-soft: #5E6C84;
-    --page-accent: #096179;
-    --page-line: #E4E7EC;
-  }
-  html, body { background: var(--page-bg); }
-  /* The hidden attribute must win over any element's own display rule (e.g.
-     #pw-modal's display:flex). The published-artifact wrapper injects this
-     reset, but a standalone file has no wrapper, so declare it here too —
-     without it the empty modal shows on load and can't be dismissed. */
-  [hidden] { display: none !important; }
-  body {
-    margin: 0; color: var(--page-ink);
-    font-family: "Lato", "Helvetica Neue", system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  .page-wrap { max-width: 1080px; margin: 0 auto; padding-block: 32px 56px; padding-left: 20px; padding-right: 20px; }
-  .page-eyebrow {
-    font-family: "Poppins", sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--page-accent); margin: 0 0 6px;
-  }
-  .page-title {
-    font-family: "Poppins", sans-serif; font-weight: 700; font-size: 26px; line-height: 1.2;
-    color: var(--page-ink); margin: 0 0 8px; text-wrap: balance;
-  }
-  .page-lede { font-size: 14px; line-height: 20px; color: var(--page-ink-soft); max-width: 62ch; margin: 0 0 24px; }
-
-  /* A light Jira-style "issue view" frame so the panel reads in its real context. */
-  .issue-frame {
-    background: var(--page-panel); border: 1px solid var(--page-line); border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(9,30,66,0.06), 0 12px 32px rgba(9,30,66,0.08);
-    overflow: hidden;
-  }
-  .issue-bar { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--page-line); }
-  .issue-key {
-    font-family: "Poppins", sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.04em;
-    color: var(--page-accent); background: #E7F1F4; padding: 3px 9px; border-radius: 6px;
-  }
-  .issue-summary { font-size: 13.5px; font-weight: 600; color: var(--page-ink); min-width: 0;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .issue-dot { width: 4px; height: 4px; border-radius: 50%; background: #C1C7D0; flex-shrink: 0; }
-  .issue-body { padding: 22px; }
-  .field-label {
-    font-family: "Poppins", sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--page-ink-soft); margin: 0 0 10px;
-  }
-
-  .demo-bar {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
-    margin-top: 20px; padding: 12px 16px; border-radius: 12px;
-    background: #F6F8FA; border: 1px solid var(--page-line);
-  }
-  .demo-note { font-size: 12px; color: var(--page-ink-soft); flex: 1; min-width: 200px; line-height: 17px; }
-  .demo-note b { color: var(--page-ink); font-weight: 700; }
-  .demo-btn {
-    cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px;
-    border-radius: 8px; border: 1px solid var(--page-line); background: #fff; color: var(--page-accent);
-    font-family: "Lato", sans-serif; font-weight: 700; font-size: 12px; white-space: nowrap;
-    transition: background .15s ease, border-color .15s ease;
-  }
-  .demo-btn:hover { background: #EEF6F8; border-color: #BFD9E0; }
-  .demo-btn .material-symbols-outlined { font-size: 16px; }
-
-  /* ═══════════════════════════════════════════════════════════════════════
-     Persona issue panel — ported verbatim from static/ui/main/styles.css
-     ═══════════════════════════════════════════════════════════════════════ */
-  .widget-scope {
     --font-display: "Poppins", "Helvetica Neue", system-ui, sans-serif;
     --font-body: "Lato", "Helvetica Neue", system-ui, sans-serif;
-    --ext-accent: #096179;   --ext-tint: #DAEDF1;  --ext-tint-soft: #EDF7F9;
-    --int-accent: #C2610F;   --int-tint: #FDE3CA;  --int-tint-soft: #FFF3E9;
-    --sup-accent: #0F8A6C;   --sup-tint: #D2F0E4;  --sup-tint-soft: #EEFAF5;
-    --quote-accent-takers: #064557;
-    --quote-accent-managers: #8B450A;
-    --quote-accent-support: #0B5C45;
-    --ink: #172B4D; --ink-soft: #5E6C84; --border: #D9D8D8;
-    font-family: var(--font-body); color: var(--ink);
-  }
-  .widget-scope * { box-sizing: border-box; }
-  .widget-scope .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: normal; font-size: 24px;
-    line-height: 1; display: inline-block; -webkit-font-smoothing: antialiased; vertical-align: middle; }
-  .widget-scope .icon-sm { font-size: 18px; }
-  .widget-scope .icon-lg { font-size: 28px; }
 
-  .panel { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: #fff; }
-  .panel-head { position: relative; display: flex; flex-wrap: wrap; row-gap: 4px; align-items: center; gap: 12px; padding: 7px 20px; border-bottom: 1px solid #EBECF0; }
-  .panel-head .material-symbols-outlined.icon-lg { color: var(--ext-accent); }
-  .panel-title-row { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; row-gap: 2px; }
-  .panel-title { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--ink); }
-  .panel-count-pill {
-    display: inline-flex; align-items: center; height: 20px; padding: 0 10px; border-radius: 100px;
-    background: var(--ext-tint-soft); color: var(--ext-accent); font-size: 11px; font-weight: 700;
-  }
+    /* Segment palette (the product's real tokens) */
+    --ext-accent: #096179; --ext-tint: #DAEDF1; --ext-tint-soft: #EDF7F9; --ext-border: #C6E1E8;
+    --int-accent: #C2610F; --int-tint: #FDE3CA; --int-tint-soft: #FFF3E9; --int-border: #F1D6BB;
+    --sup-accent: #0F8A6C; --sup-tint: #D2F0E4; --sup-tint-soft: #EEFAF5; --sup-border: #BFE6D4;
 
-  .wizard-stepper { display: flex; flex-wrap: wrap; row-gap: 4px; align-items: center; gap: 8px; }
-  .wizard-stepper-step { display: flex; align-items: center; gap: 8px; }
-  .wizard-stepper-num {
-    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; background: #EBECF0; color: var(--ink-soft);
-    transition: background .2s ease, color .2s ease;
+    --ink: #172B4D; --ink-soft: #5E6C84; --line: #E4E7EC;
+    --page-bg: #EEF1F4; --card-bg: #FFFFFF;
   }
-  .wizard-stepper-num .material-symbols-outlined { font-size: 14px; color: #fff; }
-  .wizard-stepper-step.active .wizard-stepper-num { background: var(--ext-accent); color: #fff; }
-  .wizard-stepper-step.done .wizard-stepper-num { background: var(--ext-accent); }
-  .wizard-stepper-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
-  .wizard-stepper-step.active .wizard-stepper-label { color: var(--ink); }
-  .wizard-stepper-connector { width: 28px; height: 2px; border-radius: 1px; background: #EBECF0; transition: background .2s ease; }
-  .wizard-stepper-connector.filled { background: var(--ext-accent); }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { background: var(--page-bg); }
+  body {
+    margin: 0; color: var(--ink); font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased; line-height: 1.5;
+  }
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined'; font-weight: normal; font-size: 24px; line-height: 1;
+    display: inline-block; vertical-align: middle; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-block: 40px 64px; padding-left: 20px; padding-right: 20px; }
 
-  .widget-scope .spacer { flex: 1; }
-  .action-btn { position: relative; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px;
-    border-radius: 8px; color: var(--ext-accent); font-weight: 700; font-size: 13px; flex-shrink: 0; }
-  .action-btn:hover { background: #ECF6F8; }
-  .action-btn .material-symbols-outlined { font-size: 18px; }
+  /* ── Header ─────────────────────────────────────────────────────────────── */
+  .eyebrow {
+    font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ext-accent); margin: 0 0 8px;
+  }
+  h1.title {
+    font-family: var(--font-display); font-weight: 700; font-size: 34px; line-height: 1.12;
+    margin: 0 0 12px; color: var(--ink); text-wrap: balance;
+  }
+  .lede { font-size: 15px; line-height: 22px; color: var(--ink-soft); max-width: 64ch; margin: 0; }
 
-  .persona-carousel { position: relative; }
-  .persona-cards {
-    padding: 28px 20px 50px 60px; display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 20px;
-    overflow-x: auto; scroll-behavior: smooth; scroll-snap-type: x mandatory;
-    scrollbar-width: none; -ms-overflow-style: none;
+  /* ── Section scaffolding ────────────────────────────────────────────────── */
+  .section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin: 40px 0 16px; }
+  .section-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: var(--ink); margin: 0; }
+  .section-hint { font-size: 13px; color: var(--ink-soft); }
+  .section-head .spacer { flex: 1; }
+  .toolbtn {
+    cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 11px;
+    border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ext-accent);
+    font-family: var(--font-body); font-weight: 700; font-size: 12px; white-space: nowrap;
+    transition: background .15s ease, border-color .15s ease, opacity .15s ease;
   }
-  .persona-cards::-webkit-scrollbar { display: none; }
-  .persona-card {
-    position: relative;
-    scroll-snap-align: start;
-    min-width: 0; flex: 0 0 220px; width: 220px; display: flex; align-items: stretch;
-    border-radius: 18px; overflow: hidden;
-    transition: flex-basis .45s cubic-bezier(0.4,0,0.2,1), width .45s cubic-bezier(0.4,0,0.2,1),
-      margin-left .45s cubic-bezier(0.4,0,0.2,1), background .3s ease, box-shadow .3s ease, transform .3s ease;
-  }
-  .persona-card.expanded { flex: 0 0 100%; width: 100%; margin-left: 60px; scroll-margin-left: 60px; box-shadow: 0 12px 28px rgba(9, 30, 66, 0.2); }
-  .persona-card.expanded.leave-takers { background: linear-gradient(150deg, #DAEDF1 0%, #F3FAFB 70%); }
-  .persona-card.expanded.leave-managers { background: linear-gradient(150deg, #FDE3CA 0%, #FFF3E9 70%); }
-  .persona-card.expanded.support { background: linear-gradient(150deg, #D2F0E4 0%, #F3FBF8 70%); }
-
-  .persona-card:not(.expanded):hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(9, 30, 66, 0.16); }
-  .persona-card.leave-takers:hover { background: linear-gradient(150deg, #E4F2F6 0%, #FAFDFE 68%); }
-  .persona-card.leave-managers:hover { background: linear-gradient(150deg, #FFEEDF 0%, #FFFAF5 68%); }
-  .persona-card.support:hover { background: linear-gradient(150deg, #DCF4E9 0%, #FAFEFC 68%); }
-
-  .carousel-arrow {
-    position: absolute; top: 50%; transform: translateY(-50%) scale(0.9);
-    width: 36px; height: 36px; border-radius: 50%; background: #fff; color: var(--ink);
-    box-shadow: 0 2px 10px rgba(9, 30, 66, 0.2); display: flex; align-items: center; justify-content: center;
-    cursor: pointer; opacity: 0; pointer-events: none; z-index: 2;
-    transition: opacity .25s ease, transform .25s ease, background .2s ease;
-  }
-  .persona-carousel:hover .carousel-arrow:not(.disabled) { opacity: 1; pointer-events: auto; transform: translateY(-50%) scale(1); }
-  .carousel-arrow:hover { background: #F4F5F7; }
-  .carousel-arrow-left { left: 10px; }
-  .carousel-arrow-right { right: 10px; }
-
-  .carousel-dots {
-    display: flex; justify-content: center; align-items: center; gap: 8px;
-    padding: 0 20px 14px; margin-top: -34px; position: relative; z-index: 1;
-  }
-  .carousel-dot {
-    width: 7px; height: 7px; border-radius: 4px; background: #D9D8D8; cursor: pointer;
-    transition: background .25s ease, width .25s ease;
-  }
-  .carousel-dot.active { background: var(--ext-accent); width: 20px; }
-  .persona-card.leave-takers { border: 1px solid #C6E1E8; background: linear-gradient(150deg, #F1F9FB 0%, #FFFFFF 65%); }
-  .persona-card.leave-managers { border: 1px solid #F1D6BB; background: linear-gradient(150deg, #FFF6EE 0%, #FFFFFF 65%); }
-  .persona-card.support { border: 1px solid #BFE6D4; background: linear-gradient(150deg, #F1FBF6 0%, #FFFFFF 65%); }
-
-  .persona-card-main {
-    min-width: 0; flex: 0 0 220px; width: 220px; height: 410px;
-    display: flex; flex-direction: column; padding: 20px 20px 0; cursor: pointer;
-  }
-  .name-last-word { white-space: nowrap; }
-  .expand-indicator {
-    display: inline-block; font-size: 20px; color: var(--ink-soft); vertical-align: -4px; margin-left: 4px;
-    cursor: pointer;
-    transition: top .35s cubic-bezier(0.4,0,0.2,1), right .35s cubic-bezier(0.4,0,0.2,1), color .3s ease;
-  }
-  .persona-card.expanded .expand-indicator {
-    position: absolute; top: 18px; right: 20px; margin-left: 0; vertical-align: baseline;
-    font-size: 22px; color: var(--ink-soft);
-  }
-  .persona-card.expanded .expand-indicator:hover { color: var(--ink); }
-
-  .persona-card-details {
-    min-width: 0; flex: 0 0 0px; opacity: 0; max-height: 410px; overflow: hidden;
-    transition: flex-grow .45s cubic-bezier(0.4,0,0.2,1), opacity .3s ease, padding .45s cubic-bezier(0.4,0,0.2,1);
-  }
-  .persona-card.expanded .persona-card-details {
-    flex: 1 1 0px; opacity: 1; padding: 24px 24px 24px 4px; overflow-y: auto;
-  }
-  .persona-detail-inner { width: 100%; max-width: 460px; }
-  .persona-detail-desc { font-size: 14px; line-height: 20px; color: var(--ink); margin-bottom: 18px; }
-  .persona-detail-heading { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--ink-soft);
-    text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
-  .persona-detail-jtbd { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-  .persona-detail-jtbd li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 19px; color: var(--ink); }
-  .jtbd-check { font-size: 19px; flex-shrink: 0; margin-top: -1px; }
-  .jtbd-check.leave-takers { color: var(--ext-accent); }
-  .jtbd-check.leave-managers { color: var(--int-accent); }
-  .jtbd-check.support { color: var(--sup-accent); }
-
-  .insights-heading { margin-top: 20px; }
-  .insight-cards { display: flex; flex-direction: column; gap: 10px; }
-  .insight-card {
-    display: block; padding: 12px 14px; border-radius: 12px; background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(9, 30, 66, 0.08); text-decoration: none; color: inherit;
-    transition: background .2s ease, border-color .2s ease, transform .2s ease;
-  }
-  .insight-card:hover { background: #fff; border-color: rgba(9, 30, 66, 0.18); transform: translateY(-1px); }
-  .insight-type {
-    display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
-    color: var(--ink-soft); margin-bottom: 5px;
-  }
-  .insight-title { font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--ink); margin-bottom: 4px; }
-  .insight-snippet { font-size: 12px; line-height: 17px; color: var(--ink-soft); margin-bottom: 8px; }
-  .insight-source {
-    display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;
-    color: var(--ext-accent); text-transform: uppercase; letter-spacing: 0.03em;
-  }
-  .persona-card.leave-managers .insight-source { color: var(--int-accent); }
-  .persona-card.support .insight-source { color: var(--sup-accent); }
-  .insight-arrow { font-size: 14px; }
-
-  .persona-card-name {
-    font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.2; color: var(--ink);
-    min-height: 54px; margin-bottom: 16px;
-  }
-  .inherited-badge {
-    display: inline-flex; align-items: center; gap: 3px;
-    margin: -10px 0 14px; padding: 2px 9px 2px 6px; border-radius: 100px;
-    background: #EBECF0; color: var(--ink-soft);
-    font-family: var(--font-body); font-size: 10.5px; font-weight: 700;
-    letter-spacing: .02em; text-transform: uppercase; white-space: nowrap;
-  }
-  .inherited-badge .material-symbols-outlined { font-size: 13px; }
-  .persona-quote-scroll { position: relative; margin-bottom: 16px; overflow: hidden; transition: height .4s ease; }
-  .persona-quote {
-    position: absolute; top: 0; left: 0; right: 0; color: #fff; font-size: 13px; line-height: 18px; font-weight: 500;
-    padding: 18px 16px 20px; border-radius: 14px 14px 14px 0; box-sizing: border-box;
-    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden;
-    opacity: 0; transform: translateY(14px);
-    transition: opacity .5s ease, transform .5s ease;
-  }
-  .persona-quote.quote-active { opacity: 1; transform: translateY(0); z-index: 1; }
-  .persona-quote.quote-leaving { opacity: 0; transform: translateY(-14px); z-index: 1; }
-  .persona-card.leave-takers .persona-quote { background: var(--quote-accent-takers); box-shadow: 0 10px 20px rgba(6, 69, 87, 0.4); }
-  .persona-card.leave-managers .persona-quote { background: var(--quote-accent-managers); box-shadow: 0 10px 20px rgba(139, 69, 10, 0.4); }
-  .persona-card.support .persona-quote { background: var(--quote-accent-support); box-shadow: 0 10px 20px rgba(11, 92, 69, 0.4); }
-  .persona-quote::before, .persona-quote::after {
-    position: absolute; font-family: Georgia, "Times New Roman", serif; font-weight: 700; line-height: 1;
-    color: rgba(255, 255, 255, 0.32); font-size: 28px;
-  }
-  .persona-quote::before { content: '\201C'; top: -1px; left: 8px; }
-  .persona-quote::after { content: '\201D'; bottom: -6px; right: 8px; }
-  .quote-hint {
-    position: absolute; inset: 0; z-index: 2; border-radius: 14px 14px 14px 0;
-    background: rgba(9, 30, 66, 0.88); color: #fff; font-size: 13px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center; gap: 5px;
-    opacity: 0; pointer-events: none; transition: opacity .2s ease;
-  }
-  .persona-card-main:hover .quote-hint { opacity: 1; }
-  .quote-hint .material-symbols-outlined { font-size: 16px; }
-  .persona-card-art {
-    flex-shrink: 0; height: 170px; margin: auto -20px 0; overflow: hidden;
-    display: flex; justify-content: center;
-  }
-  .persona-card-art .persona-icon { width: auto; height: 100%; display: block; transform: translateY(6px); }
-
-  /* ── First-run setup wizard ────────────────────────────────────────────── */
-  .wizard { padding: 24px 24px 20px; }
-  .wizard-head { margin-bottom: 18px; }
-  .wizard-title { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--ink); margin-bottom: 4px; }
-  .wizard-sub { font-size: 13px; color: var(--ink-soft); }
-
-  .widget-scope .checkbox {
-    width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid #CFCFC9; flex-shrink: 0;
-    background: #fff; display: flex; align-items: center; justify-content: center;
-    transition: background .12s ease, border-color .12s ease;
-  }
-  .widget-scope .checkbox.checked { background: var(--ext-accent); border-color: var(--ext-accent); }
-  .widget-scope .checkbox.just-checked { animation: checkbox-bounce .35s cubic-bezier(0.34, 1.56, 0.64, 1); }
-  .widget-scope .leave-managers .checkbox.checked { background: var(--int-accent); border-color: var(--int-accent); }
-  .widget-scope .support .checkbox.checked { background: var(--sup-accent); border-color: var(--sup-accent); }
-  .widget-scope .checkbox .material-symbols-outlined { color: #fff; font-size: 14px; opacity: 0; transform: scale(0.3);
-    transition: opacity .12s ease, transform .22s cubic-bezier(0.34,1.56,0.64,1); }
-  .widget-scope .checkbox.checked .material-symbols-outlined { opacity: 1; transform: scale(1); }
-  @keyframes checkbox-bounce {
-    0% { transform: scale(0.6); }
-    55% { transform: scale(1.18); }
-    100% { transform: scale(1); }
+  .toolbtn:hover { background: #EEF6F8; border-color: #BFD9E0; }
+  .toolbtn[disabled] { opacity: .4; pointer-events: none; }
+  .toolbtn .material-symbols-outlined { font-size: 16px; }
+  .count-pill {
+    display: inline-flex; align-items: center; height: 22px; padding: 0 11px; border-radius: 100px;
+    background: var(--ext-tint-soft); color: var(--ext-accent); font-size: 12px; font-weight: 700;
   }
 
-  .widget-scope .suggest-pill {
-    display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 100px;
-    background: rgba(6, 69, 87, 0.72); color: #fff; font-size: 9px; font-weight: 700;
-    letter-spacing: 0.03em; text-transform: uppercase; flex-shrink: 0;
+  /* ── Picker ─────────────────────────────────────────────────────────────── */
+  .seg-group { margin-bottom: 22px; }
+  .seg-heading {
+    display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+    font-family: var(--font-display); font-weight: 700; font-size: 11.5px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-soft);
   }
-  .widget-scope .leave-managers .suggest-pill { background: rgba(139, 69, 10, 0.72); }
-  .widget-scope .support .suggest-pill { background: rgba(11, 92, 69, 0.72); }
+  .seg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .seg-dot.leave-takers { background: var(--ext-accent); }
+  .seg-dot.leave-managers { background: var(--int-accent); }
+  .seg-dot.support { background: var(--sup-accent); }
 
-  .wizard-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
-  .wizard-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-soft); }
-
-  .mini-persona-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-  .mini-persona-card {
-    position: relative; display: flex; flex-direction: column; align-items: center;
-    flex: 0 0 106px; width: 106px;
-    border-radius: 14px; padding: 10px 8px 12px; cursor: pointer;
-    transition: transform .15s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+  .pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .pick-card {
+    position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+    border-radius: 14px; padding: 14px 12px 14px; text-align: center;
+    transition: transform .16s ease, box-shadow .18s ease, border-color .16s ease, background .16s ease;
   }
-  .mini-persona-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(9, 30, 66, 0.12); }
-  .mini-persona-card.leave-takers { border: 1px solid #C6E1E8; background: linear-gradient(150deg, #F1F9FB 0%, #FFFFFF 65%); }
-  .mini-persona-card.leave-managers { border: 1px solid #F1D6BB; background: linear-gradient(150deg, #FFF6EE 0%, #FFFFFF 65%); }
-  .mini-persona-card.support { border: 1px solid #BFE6D4; background: linear-gradient(150deg, #F1FBF6 0%, #FFFFFF 65%); }
-  .mini-persona-card.checked.leave-takers { border-color: var(--ext-accent); box-shadow: 0 0 0 1px var(--ext-accent); }
-  .mini-persona-card.checked.leave-managers { border-color: var(--int-accent); box-shadow: 0 0 0 1px var(--int-accent); }
-  .mini-persona-card.checked.support { border-color: var(--sup-accent); box-shadow: 0 0 0 1px var(--sup-accent); }
+  .pick-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(9,30,66,0.12); }
+  .pick-card.leave-takers { border: 1px solid var(--ext-border); background: linear-gradient(155deg, #F1F9FB 0%, #FFFFFF 66%); }
+  .pick-card.leave-managers { border: 1px solid var(--int-border); background: linear-gradient(155deg, #FFF6EE 0%, #FFFFFF 66%); }
+  .pick-card.support { border: 1px solid var(--sup-border); background: linear-gradient(155deg, #F1FBF6 0%, #FFFFFF 66%); }
+  .pick-card.selected.leave-takers { border-color: var(--ext-accent); box-shadow: 0 0 0 1.5px var(--ext-accent); }
+  .pick-card.selected.leave-managers { border-color: var(--int-accent); box-shadow: 0 0 0 1.5px var(--int-accent); }
+  .pick-card.selected.support { border-color: var(--sup-accent); box-shadow: 0 0 0 1.5px var(--sup-accent); }
 
-  .mini-persona-top { display: flex; align-items: flex-start; justify-content: space-between; width: 100%; margin-bottom: 4px; }
-  .mini-persona-art { width: 100%; height: 76px; display: flex; align-items: flex-start; justify-content: center; overflow: hidden; margin-bottom: 6px; }
-  .mini-persona-art .persona-icon { width: auto; height: 150%; display: block; }
-  .mini-persona-name { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--ink); text-align: center; line-height: 1.25; margin-bottom: 6px; }
-  .mini-persona-learn-more { margin-top: auto; font-size: 11px; font-weight: 700; color: var(--ext-accent); cursor: pointer; }
-  .leave-managers .mini-persona-learn-more { color: var(--int-accent); }
-  .support .mini-persona-learn-more { color: var(--sup-accent); }
-  .mini-persona-learn-more:hover { text-decoration: underline; }
+  .pick-check {
+    position: absolute; top: 10px; right: 10px;
+    width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid #CFD3DA; background: #fff;
+    display: flex; align-items: center; justify-content: center; transition: background .12s ease, border-color .12s ease;
+  }
+  .pick-check .material-symbols-outlined { color: #fff; font-size: 15px; opacity: 0; transform: scale(.4);
+    transition: opacity .12s ease, transform .2s cubic-bezier(0.34,1.56,0.64,1); }
+  .pick-card.selected .pick-check .material-symbols-outlined { opacity: 1; transform: scale(1); }
+  .pick-card.selected.leave-takers .pick-check { background: var(--ext-accent); border-color: var(--ext-accent); }
+  .pick-card.selected.leave-managers .pick-check { background: var(--int-accent); border-color: var(--int-accent); }
+  .pick-card.selected.support .pick-check { background: var(--sup-accent); border-color: var(--sup-accent); }
 
-  .guide-btn-wrap { position: relative; }
-  .guide-btn {
-    position: relative; height: 32px; padding: 0 10px; border-radius: 8px; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px; color: var(--ext-accent); font-weight: 700; font-size: 13px;
+  .pick-art { width: 100%; height: 92px; display: flex; align-items: flex-start; justify-content: center; overflow: hidden; margin-bottom: 8px; }
+  .pick-art img { width: auto; height: 148%; display: block; }
+  .pick-name { font-family: var(--font-display); font-weight: 700; font-size: 14px; line-height: 1.22; color: var(--ink); }
+
+  /* ── Detail cards ───────────────────────────────────────────────────────── */
+  .detail-list { display: flex; flex-direction: column; gap: 20px; }
+  .empty {
+    border: 1.5px dashed var(--line); border-radius: 16px; padding: 44px 24px; text-align: center;
+    color: var(--ink-soft); background: #fff;
+  }
+  .empty .material-symbols-outlined { font-size: 34px; color: #B7C0CE; display: block; margin: 0 auto 10px; }
+  .empty-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--ink); margin-bottom: 4px; }
+
+  .detail-card {
+    display: flex; border-radius: 18px; overflow: hidden; background: var(--card-bg);
+    border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(9,30,66,0.05), 0 14px 30px rgba(9,30,66,0.07);
+    animation: card-in .3s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .detail-card.leave-takers { border-color: var(--ext-border); }
+  .detail-card.leave-managers { border-color: var(--int-border); }
+  .detail-card.support { border-color: var(--sup-border); }
+
+  /* Left: illustration panel */
+  .detail-aside {
+    flex: 0 0 232px; position: relative; display: flex; flex-direction: column; align-items: center;
+    padding: 24px 20px 0; overflow: hidden;
+  }
+  .detail-card.leave-takers .detail-aside { background: linear-gradient(165deg, #DAEDF1 0%, #EFF8FA 60%); }
+  .detail-card.leave-managers .detail-aside { background: linear-gradient(165deg, #FDE3CA 0%, #FFF4EA 60%); }
+  .detail-card.support .detail-aside { background: linear-gradient(165deg, #D2F0E4 0%, #EDFAF4 60%); }
+  .seg-chip {
+    align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 10px;
+    border-radius: 100px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #fff;
+  }
+  .detail-card.leave-takers .seg-chip { background: rgba(6,69,87,0.82); }
+  .detail-card.leave-managers .seg-chip { background: rgba(139,69,10,0.82); }
+  .detail-card.support .seg-chip { background: rgba(11,92,69,0.82); }
+  .detail-name {
+    align-self: flex-start; font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.2;
+    color: var(--ink); margin: 14px 0 0;
+  }
+  .detail-aside-art { margin-top: auto; height: 190px; display: flex; align-items: flex-end; justify-content: center; }
+  .detail-aside-art img { width: auto; height: 100%; display: block; transform: translateY(4px); }
+
+  /* Right: content */
+  .detail-body { flex: 1; min-width: 0; padding: 24px 26px 26px; position: relative; }
+  .detail-remove {
+    position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: var(--ink-soft); background: transparent;
     transition: background .15s ease, color .15s ease;
   }
-  .guide-btn:hover { background: #ECF6F8; }
-  .guide-hint {
-    position: absolute; top: calc(100% + 10px); right: 0; z-index: 3;
-    background: var(--ink); color: #fff; font-size: 12px; font-weight: 600;
-    padding: 8px 12px; border-radius: 8px; white-space: nowrap;
-    box-shadow: 0 6px 16px rgba(9, 30, 66, 0.25);
-    animation: guide-hint-in .4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
-  .guide-hint::before {
-    content: ''; position: absolute; bottom: 100%; right: 12px;
-    border: 6px solid transparent; border-bottom-color: var(--ink);
-  }
-  @keyframes guide-hint-in {
-    0% { opacity: 0; transform: translateY(-6px) scale(0.9); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .guide-hint.fading { animation: guide-hint-out .3s ease both; }
-  @keyframes guide-hint-out {
-    to { opacity: 0; transform: translateY(-4px) scale(0.95); }
-  }
+  .detail-remove:hover { background: #F1F1F1; color: var(--ink); }
+  .detail-remove .material-symbols-outlined { font-size: 19px; }
+  .detail-desc { font-size: 14.5px; line-height: 21px; color: var(--ink); max-width: 60ch; margin: 0 44px 20px 0; }
 
-  .wizard-footer { display: flex; flex-wrap: wrap; row-gap: 10px; align-items: center; gap: 12px; }
-  .wizard-count { font-size: 12px; color: var(--ink-soft); }
-  .widget-scope .btn {
-    position: relative; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 18px;
-    border-radius: 8px; font-weight: 700; font-size: 13px; transition: background .15s ease, opacity .15s ease;
+  .detail-heading {
+    font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 12px;
   }
-  .widget-scope .btn-primary { background: var(--ext-accent); color: #fff; }
-  .widget-scope .btn-primary:hover { background: #0A7591; }
-  .widget-scope .btn-primary.disabled { opacity: 0.4; pointer-events: none; }
-  .widget-scope .btn-secondary { background: #F1F1F1; color: var(--ink); }
-  .widget-scope .btn-secondary:hover { background: #E5E5E5; }
+  .jtbd-list { list-style: none; margin: 0 0 22px; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; }
+  .jtbd-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 19px; color: var(--ink); }
+  .jtbd-check { font-size: 19px; flex-shrink: 0; margin-top: -1px; }
+  .leave-takers .jtbd-check { color: var(--ext-accent); }
+  .leave-managers .jtbd-check { color: var(--int-accent); }
+  .support .jtbd-check { color: var(--sup-accent); }
 
-  .wizard-jtbd-groups { display: flex; flex-direction: column; gap: 22px; margin-bottom: 20px; }
-  .wizard-jtbd-group { display: flex; gap: 18px; align-items: stretch; border-radius: 14px; padding: 18px; box-shadow: 0 4px 14px rgba(9, 30, 66, 0.08); }
-  .wizard-jtbd-group.leave-takers { background: linear-gradient(150deg, #F1F9FB 0%, #FFFFFF 70%); border: 1px solid #DCEDF1; }
-  .wizard-jtbd-group.leave-managers { background: linear-gradient(150deg, #FFF6EE 0%, #FFFFFF 70%); border: 1px solid #F1DFC9; }
-  .wizard-jtbd-group.support { background: linear-gradient(150deg, #F1FBF6 0%, #FFFFFF 70%); border: 1px solid #C9EBDA; }
-  .wizard-jtbd-art { flex: 0 0 120px; width: 120px; padding: 12px 0; box-sizing: border-box; border-radius: 12px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; }
-  .wizard-jtbd-art.leave-takers { background: var(--ext-tint); }
-  .wizard-jtbd-art.leave-managers { background: var(--int-tint); }
-  .wizard-jtbd-art.support { background: var(--sup-tint); }
-  .wizard-jtbd-art .persona-icon { width: auto; height: 90%; display: block; transform: translateY(15px); }
-  .wizard-jtbd-content { flex: 1; min-width: 0; align-self: flex-start; }
-  .wizard-jtbd-persona-name { font-family: var(--font-display); font-weight: 500; font-size: 15px; color: var(--ink); margin-bottom: 12px; }
-  .wizard-jtbd-persona-highlight { font-weight: 700; }
-  .wizard-jtbd-list { display: flex; flex-direction: column; gap: 8px; }
-  .wizard-jtbd-item {
-    display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px 8px 0; border-radius: 10px; cursor: pointer;
-    transition: background .15s ease, box-shadow .15s ease, padding-left .15s ease;
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .insight-card {
+    display: block; padding: 13px 15px; border-radius: 12px; text-decoration: none; color: inherit;
+    background: #FBFCFD; border: 1px solid var(--line);
+    transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
   }
-  .wizard-jtbd-item:hover, .wizard-jtbd-item.checked { padding-left: 10px; }
-  .wizard-jtbd-item:hover { background: rgba(255, 255, 255, 0.6); }
-  .wizard-jtbd-item.checked { background: rgba(255, 255, 255, 0.85); box-shadow: 0 0 0 1px var(--ext-accent); }
-  .leave-managers .wizard-jtbd-item.checked { box-shadow: 0 0 0 1px var(--int-accent); }
-  .support .wizard-jtbd-item.checked { box-shadow: 0 0 0 1px var(--sup-accent); }
-  .wizard-jtbd-item .checkbox { margin-top: 1px; }
-  .wizard-jtbd-text { flex: 1; font-size: 14px; line-height: 20px; color: var(--ink); }
-  .wizard-jtbd-item.custom { cursor: default; }
-  .wizard-remove-icon { font-size: 17px; color: var(--ink-soft); cursor: pointer; flex-shrink: 0; }
-  .wizard-remove-icon:hover { color: var(--ink); }
+  .insight-card:hover { background: #fff; border-color: #CDD5DF; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(9,30,66,0.08); }
+  .insight-type { display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin-bottom: 6px; }
+  .insight-title { font-family: var(--font-display); font-weight: 600; font-size: 13.5px; line-height: 1.3; color: var(--ink); margin-bottom: 5px; }
+  .insight-snippet { font-size: 12px; line-height: 17px; color: var(--ink-soft); margin-bottom: 9px; }
+  .insight-source { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+  .leave-takers .insight-source { color: var(--ext-accent); }
+  .leave-managers .insight-source { color: var(--int-accent); }
+  .support .insight-source { color: var(--sup-accent); }
+  .insight-source .material-symbols-outlined { font-size: 14px; }
 
-  .wizard-add-row { display: flex; gap: 8px; margin-top: 10px; }
-  .wizard-add-input {
-    flex: 1; height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border);
-    font-family: var(--font-body); font-size: 13px; color: var(--ink); background: #fff;
-  }
-  .wizard-add-input:focus { outline: none; border-color: var(--ext-accent); }
-  .wizard-add-btn {
-    position: relative; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; height: 34px; padding: 0 12px;
-    border-radius: 8px; background: #fff; border: 1px solid var(--border); font-weight: 600; font-size: 12px; color: var(--ink);
-    flex-shrink: 0;
-  }
-  .wizard-add-btn:hover { background: #F4F5F7; }
+  .foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-soft); }
 
-  .persona-group-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .persona-group-dot.leave-takers { background: var(--ext-accent); }
-  .persona-group-dot.leave-managers { background: var(--int-accent); }
-  .persona-group-dot.support { background: var(--sup-accent); }
-
-  .fx-btn { overflow: hidden;
-    transition: transform .2s ease, box-shadow .25s ease, background .15s ease, opacity .25s ease, color .15s ease; }
-  .fx-btn::before {
-    content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
-    background: radial-gradient(70px circle at var(--fx-px, 50%) var(--fx-py, 50%), rgba(255,255,255,0.65), transparent 70%);
-    transition: opacity .25s ease;
-  }
-  .fx-btn:hover::before { opacity: 1; }
-  .fx-btn:hover {
-    transform: translate(var(--fx-tx, 0px), var(--fx-ty, 0px));
-    box-shadow: var(--fx-sx, 0px) var(--fx-sy, 6px) 16px rgba(9, 30, 66, 0.22);
-  }
-
-  @keyframes skel-shimmer {
-    0% { background-position: -240px 0; }
-    100% { background-position: 240px 0; }
-  }
-  .skel {
-    display: inline-block; border-radius: 6px; background-color: #EBECF0;
-    background-image: linear-gradient(90deg, rgba(235,236,240,0) 0, rgba(255,255,255,0.9) 50%, rgba(235,236,240,0) 100%);
-    background-size: 240px 100%; background-repeat: no-repeat;
-    animation: skel-shimmer 1.4s ease-in-out infinite;
-  }
-  .skel-icon { width: 28px; height: 28px; border-radius: 8px; }
-  .skel-title { width: 160px; height: 17px; }
-  .skel-btn { width: 130px; height: 32px; border-radius: 8px; }
-  .skeleton-cards { display: flex; gap: 20px; padding: 28px 20px 50px 60px; }
-  .skeleton-card {
-    flex: 0 0 220px; width: 220px; height: 410px; border-radius: 18px;
-    background-color: #F1F1F1;
-    background-image: linear-gradient(90deg, rgba(241,241,241,0) 0, rgba(255,255,255,0.9) 50%, rgba(241,241,241,0) 100%);
-    background-size: 240px 100%; background-repeat: no-repeat;
-    animation: skel-shimmer 1.4s ease-in-out infinite;
-  }
-  .skeleton-card:nth-child(2) { animation-delay: .15s; }
-  .skeleton-card:nth-child(3) { animation-delay: .3s; }
-
-  /* ═══════════════════════════════════════════════════════════════════════
-     Persona guide / edit modal — ported from static/ui/modal/, scoped to #pw-modal
-     ═══════════════════════════════════════════════════════════════════════ */
-  #pw-modal {
-    --font-display: "Poppins", "Helvetica Neue", system-ui, sans-serif;
-    --font-body: "Lato", "Helvetica Neue", system-ui, sans-serif;
-    --ext-accent: #096179;   --ext-accent-light: #5AB0C0;   --ext-tint: #DAEDF1;  --ext-tint-soft: #EDF7F9;
-    --int-accent: #C2610F;   --int-tint: #FDE3CA;  --int-tint-soft: #FFF3E9;
-    --sup-accent: #0F8A6C;   --sup-accent-light: #4CBE99;   --sup-tint: #D2F0E4;  --sup-tint-soft: #EEFAF5;
-    --suggest-accent: #0E3A47;
-    --ink: #172B4D; --ink-soft: #5E6C84; --border: #D9D8D8;
-    position: fixed; inset: 0; z-index: 1000;
-    display: flex; align-items: center; justify-content: center; padding: 24px;
-    background: rgba(9, 30, 66, 0.54);
-    font-family: var(--font-body); color: var(--ink);
-    animation: pw-overlay-in .18s ease both;
-  }
-  @keyframes pw-overlay-in { from { opacity: 0; } to { opacity: 1; } }
-  #pw-modal * { box-sizing: border-box; }
-  .pw-modal-dialog {
-    width: min(960px, 100%); height: min(80vh, 760px); background: #fff; border-radius: 16px;
-    overflow: hidden; box-shadow: 0 24px 60px rgba(9, 30, 66, 0.4);
-    animation: pw-dialog-in .2s cubic-bezier(0.34,1.4,0.64,1) both;
-  }
-  @keyframes pw-dialog-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
-  #pw-modal .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: normal; font-size: 24px;
-    line-height: 1; display: inline-block; -webkit-font-smoothing: antialiased; vertical-align: middle; }
-  #pw-modal .modal { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-  #pw-modal .modal-head { flex-shrink: 0; display: flex; align-items: flex-start; gap: 12px; padding: 20px 22px 4px; }
-  #pw-modal .modal-title { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--ink); flex: 1; }
-  #pw-modal #legend { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 10px 0 14px; }
-  #pw-modal #suggested-legend { display: none; align-items: center; }
-  #pw-modal .segment-legend { display: inline-flex; align-items: center; gap: 6px; }
-  #pw-modal .segment-legend .legend-text { margin-left: 0; }
-  #pw-modal .segment-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  #pw-modal .segment-dot.leave-takers { background: var(--ext-accent-light); }
-  #pw-modal .segment-dot.leave-managers { background: var(--int-accent); }
-  #pw-modal .segment-dot.support { background: var(--sup-accent-light); }
-  #pw-modal .legend-pill, #pw-modal .suggest-pill {
-    display: inline-flex; align-items: center; gap: 4px; border-radius: 100px;
-    background: var(--suggest-accent);
-    color: #fff; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-  }
-  #pw-modal .legend-pill { gap: 4px; height: 22px; padding: 0 10px; font-size: 10px; }
-  #pw-modal .suggest-pill { gap: 3px; height: 20px; padding: 0 8px; font-size: 9px; letter-spacing: 0.03em; }
-  #pw-modal .legend-pill .sparkle, #pw-modal .suggest-pill .sparkle { color: #fff; flex-shrink: 0; }
-  #pw-modal .sparkle .star-big { transform-origin: 13px 8px; animation: sparkle-flicker 1.4s ease-in-out infinite; }
-  #pw-modal .sparkle .star-small { transform-origin: 6.5px 13px; animation: sparkle-flicker 2s ease-in-out infinite .4s; }
-  @keyframes sparkle-flicker {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.3; transform: scale(0.72); }
-  }
-  #pw-modal .legend-text { font-size: 12px; color: var(--ink-soft); font-weight: 400; margin-left: 6px; line-height: 1; }
-  #pw-modal .close-btn { cursor: pointer; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--ink-soft); }
-  #pw-modal .close-btn:hover { background: #F1F1F1; }
-
-  #pw-modal .tile-grid { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 22px 16px; display: flex; gap: 16px; align-items: flex-start; }
-  #pw-modal .tile-grid::-webkit-scrollbar { width: 10px; }
-  #pw-modal .tile-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-  #pw-modal .tile-grid::-webkit-scrollbar-thumb { background: #D3D3D3; border-radius: 100px; border: 3px solid #fff; }
-
-  #pw-modal .tile {
-    position: relative; overflow: hidden; display: flex; flex-direction: column;
-    padding: 14px 62px 0 14px; border-radius: 12px; min-height: 168px;
-    transition: transform .15s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
-  }
-  #pw-modal .tile:hover { transform: scale(0.985); }
-  #pw-modal .tile.leave-takers { border: 1px solid #C6E1E8; background: linear-gradient(150deg, #F1F9FB 0%, #FFFFFF 62%); }
-  #pw-modal .tile.leave-managers { border: 1px solid #F1D6BB; background: linear-gradient(150deg, #FFF6EE 0%, #FFFFFF 62%); }
-  #pw-modal .tile.support { border: 1px solid #BFE6D4; background: linear-gradient(150deg, #F1FBF6 0%, #FFFFFF 62%); }
-  #pw-modal .tile.checked.leave-takers { border-color: var(--ext-accent); background: linear-gradient(150deg, #DAEDF1 0%, #F3FAFB 100%); box-shadow: 0 0 0 1px var(--ext-accent); }
-  #pw-modal .tile.checked.leave-managers { border-color: var(--int-accent); background: linear-gradient(150deg, #FDE3CA 0%, #FFF6EE 100%); box-shadow: 0 0 0 1px var(--int-accent); }
-  #pw-modal .tile.checked.support { border-color: var(--sup-accent); background: linear-gradient(150deg, #D2F0E4 0%, #F1FBF6 100%); box-shadow: 0 0 0 1px var(--sup-accent); }
-  #pw-modal .tile.suggested:not(.checked) { border-style: dashed; border-width: 1.5px; }
-
-  #pw-modal .tile-row { flex: 1; display: flex; gap: 12px; align-items: stretch; cursor: pointer; }
-  #pw-modal .checkbox { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid #CFCFC9; flex-shrink: 0; margin-top: 2px;
-    display: flex; align-items: center; justify-content: center; transition: background .12s ease, border-color .12s ease; }
-  #pw-modal .checkbox.checked { background: var(--ext-accent); border-color: var(--ext-accent); }
-  #pw-modal .tile.leave-managers .checkbox.checked { background: var(--int-accent); border-color: var(--int-accent); }
-  #pw-modal .tile.support .checkbox.checked { background: var(--sup-accent); border-color: var(--sup-accent); }
-  #pw-modal .checkbox .material-symbols-outlined { color: #fff; font-size: 14px; opacity: 0; transform: scale(0.3);
-    transition: opacity .12s ease, transform .22s cubic-bezier(0.34,1.56,0.64,1); }
-  #pw-modal .checkbox.checked .material-symbols-outlined { opacity: 1; transform: scale(1); }
-
-  #pw-modal .tile-body { flex: 1; min-width: 0; position: relative; z-index: 1; }
-  #pw-modal .tile-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  #pw-modal .tile-name { font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.15; color: var(--ink); }
-  #pw-modal .tile-desc { font-size: 13px; color: var(--ink); margin-top: 10px; margin-bottom: 10px; line-height: 16px;
-    padding-right: 44px; height: 48px; overflow: hidden; display: -webkit-box;
-    -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
-  #pw-modal .tile.expanded .tile-desc { display: block; overflow: visible; height: auto; -webkit-line-clamp: unset; -webkit-box-orient: unset; }
-
-  #pw-modal .tile-avatar {
-    position: absolute; top: 0; right: 0; bottom: 0; width: 96px; overflow: hidden;
-    display: flex; align-items: flex-end; justify-content: center;
-    transform-origin: bottom center; transition: transform .32s cubic-bezier(0.4,0,0.2,1);
-  }
-  #pw-modal .tile-avatar.open { z-index: 0; }
-  #pw-modal .tile-avatar:not(.open) { z-index: 2; transform: translateY(6px) scale(1.323); }
-  #pw-modal .persona-icon { width: 95%; height: 95%; max-height: 122px; object-fit: contain; object-position: bottom center;
-    margin: 0 auto; display: block; transition: transform .18s cubic-bezier(0.34,1.56,0.64,1); transform-origin: bottom center; }
-  #pw-modal .tile:hover .persona-icon { transform: scale(0.96); }
-
-  #pw-modal .expand-toggle {
-    display: flex; align-items: center; gap: 2px; position: relative; z-index: 1;
-    margin: 0 -62px 0 -14px; padding: 14px 62px 14px 46px;
-    background: rgba(255,255,255,0.97);
-    font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; user-select: none;
-  }
-  #pw-modal .expand-toggle:not(.open) { border-top: 1px solid rgba(11, 30, 66, 0.18); }
-  #pw-modal .expand-toggle.open { padding-top: 8px; padding-bottom: 8px; }
-  #pw-modal .expand-chevron { color: var(--ext-accent); font-size: 20px; }
-
-  #pw-modal .jtbd-list { list-style: none; margin: 0 -62px 0 -14px; padding: 10px 62px 14px 46px; position: relative; z-index: 1;
-    border-top: 1px solid rgba(11, 30, 66, 0.18); background: rgba(255,255,255,0.97); display: flex; flex-direction: column; gap: 12px; }
-  #pw-modal .jtbd-list li { display: flex; align-items: flex-start; gap: 6px; font-size: 13px; color: var(--ink); line-height: 18px; }
-  #pw-modal .jtbd-check { font-size: 18px; flex-shrink: 0; margin-top: -1px;
-    animation: jtbd-pop .32s cubic-bezier(0.34,1.56,0.64,1) both; }
-  #pw-modal .jtbd-check.leave-takers { color: var(--ext-accent); }
-  #pw-modal .jtbd-check.leave-managers { color: var(--int-accent); }
-  #pw-modal .jtbd-check.support { color: var(--sup-accent); }
-  @keyframes jtbd-pop {
-    from { opacity: 0; transform: scale(0.4); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  #pw-modal .modal-footer { display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-top: 1px solid #EBECF0; }
-  #pw-modal .selected-label { font-size: 12px; color: var(--ink-soft); }
-  #pw-modal .spacer { flex: 1; }
-  #pw-modal .btn { cursor: pointer; display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 8px; font-weight: 600; font-size: 13px; }
-  #pw-modal .btn-cancel { border: 1px solid var(--border); background: #fff; color: var(--ext-accent); }
-  #pw-modal .btn-cancel:hover { background: #F1F1F1; }
-  #pw-modal .btn-save { border: 0; background: #A1D2DB; color: #252525; }
-  #pw-modal .btn-save:hover { background: #44A5B8; }
-
-  @media (max-width: 560px) {
-    .page-title { font-size: 22px; }
-    .persona-cards, .skeleton-cards { padding-left: 24px; }
+  @media (max-width: 720px) {
+    h1.title { font-size: 27px; }
+    .detail-card { flex-direction: column; }
+    .detail-aside { flex-basis: auto; flex-direction: row; align-items: flex-end; gap: 16px; padding: 16px 20px; }
+    .detail-aside .detail-name { margin: 0; }
+    .detail-aside-art { height: 120px; margin: 0 0 0 auto; }
+    .detail-aside-head { display: flex; flex-direction: column; gap: 10px; }
+    .jtbd-list { grid-template-columns: 1fr; }
+    .detail-desc { margin-right: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
-    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
   }
 </style>
 
-<div class="page-wrap">
-  <p class="page-eyebrow">AbsenceSoft · Product Personas</p>
-  <h1 class="page-title">Persona Widget</h1>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">AbsenceSoft</p>
+    <h1 class="title">Product Personas</h1>
+    <p class="lede">Seven people our leave &amp; accommodation product is built for, across three segments. Pick the personas you want to learn about to see who they are, the jobs they're trying to get done, and what the research says about them.</p>
+  </header>
 
-  <div class="issue-frame">
-    <div class="issue-body">
-      <p class="field-label">Personas</p>
-      <div class="widget-scope">
-        <div id="panel-root">
-          <div class="panel">
-            <div class="panel-head">
-              <span class="skel skel-icon"></span>
-              <span class="skel skel-title"></span>
-              <span class="spacer"></span>
-              <span class="skel skel-btn"></span>
-            </div>
-            <div class="skeleton-cards">
-              <div class="skeleton-card"></div>
-              <div class="skeleton-card"></div>
-              <div class="skeleton-card"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <section aria-labelledby="pick-title">
+    <div class="section-head">
+      <h2 class="section-title" id="pick-title">Select personas to explore</h2>
+      <span class="spacer"></span>
+      <span class="count-pill" id="count-pill">0 selected</span>
+      <button class="toolbtn" type="button" id="btn-all"><span class="material-symbols-outlined">done_all</span>Select all</button>
+      <button class="toolbtn" type="button" id="btn-clear"><span class="material-symbols-outlined">restart_alt</span>Clear</button>
     </div>
-  </div>
+    <div id="picker"></div>
+  </section>
 
-  <div class="demo-bar">
-    <span class="demo-note"><b>Standalone preview.</b> Selections persist in this browser only.</span>
-    <button class="demo-btn" type="button" data-demo="empty"><span class="material-symbols-outlined">note_add</span>Start from scratch</button>
-  </div>
-</div>
-
-<!-- Guide / edit modal overlay (filled + toggled by the forge shim) -->
-<div id="pw-modal" hidden>
-  <div class="pw-modal-dialog">
-    <div class="modal">
-      <div class="modal-head">
-        <div class="modal-title">
-          <span id="modal-title-text">Choose the users this affects</span>
-          <div id="legend">
-            <span id="suggested-legend">
-              <span class="legend-pill"><svg class="sparkle" viewBox="0 0 24 24" width="16" height="16"><path class="star-big" d="M13 0 C13 6 15 8 21 8 C15 8 13 10 13 16 C13 10 11 8 5 8 C11 8 13 6 13 0 Z" fill="currentColor"/><path class="star-small" d="M6.5 10 C6.5 12.5 7.3 13.3 9.8 13.3 C7.3 13.3 6.5 14.1 6.5 16.6 C6.5 14.1 5.7 13.3 3.2 13.3 C5.7 13.3 6.5 12.5 6.5 10 Z" fill="currentColor"/></svg>Suggested</span>
-              <span class="legend-text">= Auto-matched from this ticket</span>
-            </span>
-            <span class="segment-legend"><span class="segment-dot leave-takers"></span><span class="legend-text">= Submits Requests</span></span>
-            <span class="segment-legend"><span class="segment-dot leave-managers"></span><span class="legend-text">= Manages Leave</span></span>
-            <span class="segment-legend"><span class="segment-dot support"></span><span class="legend-text">= Provides Support</span></span>
-          </div>
-        </div>
-        <div class="close-btn" id="modal-close-x" data-maction="cancel"><span class="material-symbols-outlined">close</span></div>
-      </div>
-      <div class="tile-grid" id="tile-grid">Loading…</div>
-      <div class="modal-footer">
-        <span class="selected-label" id="selected-label">No personas selected</span>
-        <span class="spacer"></span>
-        <div class="btn btn-cancel" id="btn-cancel" data-maction="cancel">Cancel</div>
-        <div class="btn btn-save" id="btn-save" data-maction="save">Save personas</div>
-        <div class="btn btn-save" id="btn-done" data-maction="done" style="display:none;">Done</div>
-      </div>
+  <section aria-labelledby="detail-title">
+    <div class="section-head">
+      <h2 class="section-title" id="detail-title">What you'll learn</h2>
+      <span class="section-hint">Jobs to be done &amp; the latest insights</span>
     </div>
-  </div>
+    <div class="detail-list" id="detail"></div>
+  </section>
+
+  <p class="foot">A reference resource. Your selections are remembered in this browser only.</p>
 </div>
 
 <script>
-/* Inlined persona illustrations (data URIs) so this file is fully self-contained. */
+/* Inlined persona illustrations (data URIs) — fully self-contained. */
 window.__PERSONA_ICONS = {
   "experienced-employee.svg": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg1IiBoZWlnaHQ9IjMwNSIgdmlld0JveD0iMCAwIDE4NSAzMDUiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF8xMjhfMTA1NCkiPgo8cGF0aCBkPSJNNzYuODkgMTEzLjY4Qzc2Ljg5IDExMy42OCA1My44OCAxMjkuNzMgMjguMDQgMTEwLjdDMi4yMDAwMiA5MS42NyAtNS43NTk5OCA3NS4xOSAxNC4xMiA1NS4wM0MzNC4wMSAzNC44NiAzNS4xNCA4LjczMDAxIDY4Ljk0IDAuNzgwMDA3QzY4Ljk0IDAuNzgwMDA3IDgzLjQyIC0zLjQ3OTk5IDk1LjkyIDcuODgwMDFDOTUuOTIgNy44ODAwMSAxMzEuNzEgLTIuMTk5OTkgMTQ5Ljg4IDMyLjUyQzE2OC4wNiA2Ny4yNCAxNTkuNTQgMTE4LjIyIDExMC42OSAxMTMuNjdINzYuODlWMTEzLjY4WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNNTQuNzEgNzEuNjY5OEM1NC43MSA3MS42Njk4IDQ3LjcxIDY2LjAxOTggNDIuODkgNzEuNjY5OEMzOC4wNiA3Ny4zMTk4IDQ0LjYgOTUuNjk5OCA1OS42NSA5MS45Nzk4QzU5LjY1IDkxLjk3OTggNTUuMTQgNzcuMDc5OCA1NC43MiA3MS42Njk4SDU0LjcxWiIgZmlsbD0iI0VDRjZGOCIvPgo8cGF0aCBkPSJNNTUuODMgOTMuOTc5OUM1MC40NCA5My45Nzk5IDQ1LjY4IDkxLjI3OTkgNDIuNjEgODYuMzA5OUMzOS4yMSA4MC43OTk5IDM4LjgyIDc0LjA3OTkgNDEuNzIgNzAuNjg5OUM0Ni4zIDY1LjMyOTkgNTIuODQgNjguMjE5OSA1NS42NiA3MC40ODk5QzU1Ljk5IDcwLjc0OTkgNTYuMTkgNzEuMTM5OSA1Ni4yMiA3MS41NDk5QzU2LjYyIDc2LjcyOTkgNjEuMDUgOTEuMzg5OSA2MS4wOSA5MS41Mzk5QzYxLjIxIDkxLjkzOTkgNjEuMTYgOTIuMzY5OSA2MC45NiA5Mi43Mjk5QzYwLjc1IDkzLjA4OTkgNjAuNDEgOTMuMzQ5OSA2MCA5My40NDk5QzU4LjU4IDkzLjc5OTkgNTcuMTggOTMuOTY5OSA1NS44MyA5My45Njk5VjkzLjk3OTlaTTQ4LjE2IDcwLjY4OTlDNDYuNzYgNzAuNjg5OSA0NS4zIDcxLjE4OTkgNDQuMDQgNzIuNjU5OUM0Mi4wNyA3NC45Njk5IDQyLjYgODAuNDg5OSA0NS4yIDg0LjcwOTlDNDYuNiA4Ni45Njk5IDUwLjUgOTEuODM5OSA1Ny43MSA5MC44MDk5QzU2LjU4IDg2Ljk2OTkgNTMuODMgNzcuMjk5OSA1My4yNiA3Mi40OTk5QzUyLjM1IDcxLjg3OTkgNTAuMzMgNzAuNjg5OSA0OC4xNiA3MC42ODk5WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNNTEuODggODIuNzc5OUM1MS4yNSA4Mi43Nzk5IDUwLjY2IDgyLjM3OTkgNTAuNDQgODEuNzQ5OUM0OC45NCA3Ny4zOTk5IDQ2LjUyIDc3LjE5OTkgNDYuNSA3Ny4xOTk5QzQ1LjY2IDc3LjE5OTkgNDQuOTggNzYuNTE5OSA0NC45OCA3NS42Nzk5QzQ0Ljk4IDc0LjgzOTkgNDUuNjYgNzQuMTU5OSA0Ni41IDc0LjE1OTlDNDYuNjkgNzQuMTU5OSA1MS4wNyA3NC4yMzk5IDUzLjMyIDgwLjc1OTlDNTMuNTkgODEuNTQ5OSA1My4xNyA4Mi40MTk5IDUyLjM4IDgyLjY4OTlDNTIuMjIgODIuNzQ5OSA1Mi4wNSA4Mi43Njk5IDUxLjg5IDgyLjc2OTlMNTEuODggODIuNzc5OVoiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTE4MS4wNyAxNzIuNjFDMTczLjg1IDEzMy4zIDk2LjI0IDEyNy4xOCA5Mi4zMyAxMjYuODlDODguNDIgMTI3LjE4IDEwLjgxIDEzMy4yOSAzLjU5MDAxIDE3Mi42MUMtMy44MTk5OSAyMTIuOTQgMTAuODYgMzAzLjA1IDEwLjg2IDMwMy4wNUgxNzQuMDNDMTc0LjAzIDMwMy4wNSAxODguNDkgMjEyLjkzIDE4MS4wNyAxNzIuNjFaIiBmaWxsPSIjRUNGNkY4Ii8+CjxwYXRoIGQ9Ik0xNzQuMDMgMzA0LjU3SDEwLjg2QzEwLjEyIDMwNC41NyA5LjQ4MDAyIDMwNC4wMyA5LjM2MDAyIDMwMy4yOUM5LjIxMDAyIDMwMi4zOSAtNS4yNzk5OCAyMTIuNDUgMi4wOTAwMiAxNzIuMzNDMy44MTAwMiAxNjIuOTUgOS41MjAwMiAxNTQuNjYgMTkuMDUgMTQ3LjY5QzI2LjYxIDE0Mi4xNyAzNi42IDEzNy40NSA0OC43NCAxMzMuNjZDNjkuNTMgMTI3LjE4IDg5Ljk1IDEyNS41NCA5Mi4yMSAxMjUuMzdDOTIuMjggMTI1LjM3IDkyLjM2IDEyNS4zNyA5Mi40MyAxMjUuMzdDOTQuNjkgMTI1LjU0IDExNS4xMSAxMjcuMTggMTM1LjkgMTMzLjY2QzE0OC4wNSAxMzcuNDUgMTU4LjA0IDE0Mi4xNyAxNjUuNTkgMTQ3LjY5QzE3NS4xMiAxNTQuNjYgMTgwLjgzIDE2Mi45NSAxODIuNTUgMTcyLjMzQzE4OS45MiAyMTIuNDUgMTc1LjY2IDMwMi4zOCAxNzUuNTEgMzAzLjI5QzE3NS4zOSAzMDQuMDMgMTc0Ljc2IDMwNC41NyAxNzQuMDEgMzA0LjU3SDE3NC4wM1pNMTIuMTYgMzAxLjU0SDE3Mi43M0MxNzQuNDQgMjkwLjQxIDE4Ni4zOCAyMDkuOSAxNzkuNTggMTcyLjg5QzE3Mi42NCAxMzUuMTEgOTYuOTMgMTI4Ljc3IDkyLjMzIDEyOC40MkM4Ny43MyAxMjguNzcgMTIuMDMgMTM1LjEgNS4wODAwMiAxNzIuODlDLTEuNzI5OTggMjA5LjkxIDEwLjQyIDI5MC40MyAxMi4xNiAzMDEuNTRaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik03OC4xNDAxIDEzMC4xOEM3OC4xNDAxIDEzMC4xOCA3My4xNzAxIDEyOS41NSA3Mi40OTAxIDEzMy4wM0M2OS41NjAxIDE0OC4xMyA1OC44MTAxIDE5Ny4zIDkyLjM0MDEgMjcyLjQ3QzkyLjM0MDEgMjcyLjQ3IDEyOS42MiAxOTMuOTMgMTExLjY4IDEyOS41NUMxMTEuNjggMTI5LjU1IDkyLjkxMDEgMTQ3LjY5IDc4LjE0MDEgMTMwLjE4WiIgZmlsbD0iI0VDRjZGOCIvPgo8cGF0aCBkPSJNMTEyLjM5IDQzLjk1QzExMi4zOSA0My45NSAxMDMuMDIgNTEuOSA5MS4wODk5IDM3Ljk5Qzc5LjE1OTkgMjQuMDcgNTguOTA5OSAzOS4zOCA1NC43OTk5IDU0LjE4QzUyLjc4OTkgNjEuNDMgNTUuNzE5OSA3NC4zOCA1OC4yMzk5IDg5LjYzQzU5LjQ5OTkgOTcuMjYgNjEuNTI5OSAxMDIuNTUgNjQuNDQ5OSAxMDYuNDlDNjcuMzU5OSAxMTAuNDIgNzEuNDU5OSAxMTMuMjcgNzYuMzU5OSAxMTUuNTFDNzcuMTk5OSAxMjAuNDEgNzguODc5OSAxMzEuNDMgNzguODc5OSAxMzEuNDNDNzguODc5OSAxMzEuNDMgOTEuMDg5OSAxNDMuMzYgMTA5Ljg0IDEzMS40M0MxMDkuODQgMTMxLjQzIDExMC41MyAxMTkuNzYgMTExLjQ3IDExNC45M0MxMTEuNDcgMTE0LjkzIDExOC40NyAxMTEuNDggMTIzLjc3IDEwMS43OEMxMjkuNDggOTEuMzIgMTMyLjk5IDczLjc3IDEzMC44NiA1MS4wNUMxMzAuODYgNTEuMDUgMTI3Ljc0IDMzLjczIDExMi40IDQzLjk1SDExMi4zOVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik05My40NCAxMzguMjRDOTAuOTMgMTM4LjI0IDg4Ljc0IDEzNy44NyA4Ni45MiAxMzcuMzdDODEuMjEgMTM1Ljc5IDc3Ljk1IDEzMi42NSA3Ny44MSAxMzIuNTJDNzcuNTcgMTMyLjI5IDc3LjQyIDEzMS45OSA3Ny4zNyAxMzEuNjZDNzcuMzUgMTMxLjU2IDc1Ljg1IDEyMS42OCA3NC45OSAxMTYuNTVDNjkuODEgMTE0LjA3IDY1Ljk1IDExMS4wNyA2My4yMyAxMDcuNEM2MC4wOCAxMDMuMTQgNTguMDIgOTcuNTgwMSA1Ni43NCA4OS44ODAxQzU2LjMxIDg3LjI3MDEgNTUuODcgODQuNzQwMSA1NS40NCA4Mi4yODAxQzUzLjI4IDY5Ljg5MDEgNTEuNTggNjAuMTEwMSA1My4zMyA1My43ODAxQzU2LjIyIDQzLjQyMDEgNjYuMDggMzMuNjEwMSA3NS43OCAzMS40NjAxQzgyLjIxIDMwLjAzMDEgODcuOSAzMS45NTAxIDkyLjI0IDM3LjAxMDFDMTAyLjk4IDQ5LjU0MDEgMTExLjA3IDQzLjA4MDEgMTExLjQxIDQyLjgwMDFDMTExLjQ1IDQyLjc3MDEgMTExLjUgNDIuNzMwMSAxMTEuNTQgNDIuNzAwMUMxMTYuNjQgMzkuMzAwMSAxMjEuMTEgMzguMzgwMSAxMjQuODMgMzkuOTYwMUMxMzAuNzggNDIuNDkwMSAxMzIuMjggNTAuNDUwMSAxMzIuMzQgNTAuNzkwMUMxMzIuMzQgNTAuODMwMSAxMzIuMzUgNTAuODcwMSAxMzIuMzYgNTAuOTIwMUMxMzQuMzEgNzEuNjcwMSAxMzEuNjYgOTAuNDcwMSAxMjUuMDkgMTAyLjUyQzEyMC41NCAxMTAuODQgMTE0LjggMTE0Ljc2IDExMi44MyAxMTUuOTJDMTExLjk4IDEyMC45NCAxMTEuMzYgMTMxLjQyIDExMS4zNSAxMzEuNTNDMTExLjMyIDEzMi4wMiAxMTEuMDYgMTMyLjQ2IDExMC42NSAxMzIuNzJDMTA0LjAyIDEzNi45NCA5OC4xNiAxMzguMjUgOTMuNDQgMTM4LjI1VjEzOC4yNFpNODAuMyAxMzAuNjZDODIuMzYgMTMyLjQxIDkyLjggMTQwLjA3IDEwOC4zNyAxMzAuNTVDMTA4LjU0IDEyNy44MiAxMDkuMTYgMTE4LjgzIDEwOS45OCAxMTQuNjNDMTEwLjA3IDExNC4xNyAxMTAuMzcgMTEzLjc3IDExMC44IDExMy41NkMxMTAuODYgMTEzLjUzIDExNy40NSAxMTAuMTUgMTIyLjQ0IDEwMS4wNEMxMjguNzEgODkuNTMwMSAxMzEuMjMgNzEuMzkwMSAxMjkuMzYgNTEuMjYwMUMxMjkuMjMgNTAuNjMwMSAxMjcuODggNDQuNTIwMSAxMjMuNjUgNDIuNzMwMUMxMjAuOTQgNDEuNTgwMSAxMTcuNDUgNDIuNDEwMSAxMTMuMjggNDUuMTgwMUMxMTIuMTcgNDYuMDMwMSAxMDIuMDQgNTMuMDkwMSA4OS45NCAzOC45NzAxQzg2LjM4IDM0LjgyMDEgODEuNzIgMzMuMjQwMSA3Ni40NSAzNC40MTAxQzY3Ljg5IDM2LjMxMDEgNTguODQgNDUuMzYwMSA1Ni4yNyA1NC41ODAxQzU0LjcgNjAuMjYwMSA1Ni40NCA3MC4yMjAxIDU4LjQ0IDgxLjc1MDFDNTguODcgODQuMjEwMSA1OS4zMSA4Ni43NjAxIDU5Ljc0IDg5LjM3MDFDNjAuOTQgOTYuNTcwMSA2Mi44MiAxMDEuNzIgNjUuNjcgMTA1LjU4QzY4LjIxIDEwOSA3MS45MSAxMTEuOCA3Ni45OSAxMTQuMTJDNzcuNDUgMTE0LjMzIDc3Ljc3IDExNC43NSA3Ny44NiAxMTUuMjVDNzguNTggMTE5LjQ4IDc5Ljk1IDEyOC4zOSA4MC4zIDEzMC42NloiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTEzMS43MiA3Mi4xOEMxMzEuNzIgNzIuMTggMTM4LjQ0IDY2LjIgMTQzLjUzIDcxLjYyQzE0OC42MiA3Ny4wNCAxNDIuOTYgOTUuNjk5OSAxMjcuNzUgOTIuNjk5OUMxMjcuNzUgOTIuNjk5OSAxMzEuNTUgNzcuNiAxMzEuNzIgNzIuMThaIiBmaWxsPSIjRUNGNkY4Ii8+CjxwYXRoIGQ9Ik0xMzAuODggOTQuNTNDMTI5Ljc3IDk0LjUzIDEyOC42MiA5NC40MiAxMjcuNDYgOTQuMTlDMTI3LjA1IDk0LjExIDEyNi42OSA5My44NiAxMjYuNDcgOTMuNTFDMTI2LjI1IDkzLjE2IDEyNi4xOCA5Mi43MyAxMjYuMjggOTIuMzNDMTI2LjMyIDkyLjE4IDEzMC4wNSA3Ny4zMyAxMzAuMiA3Mi4xNEMxMzAuMjEgNzEuNzIgMTMwLjQgNzEuMzMgMTMwLjcxIDcxLjA1QzEzMy40MiA2OC42NCAxMzkuODEgNjUuNDUgMTQ0LjY0IDcwLjU5QzE0Ny42OSA3My44NCAxNDcuNjMgODAuNTcgMTQ0LjQ5IDg2LjIzQzE0MS41MyA5MS41OCAxMzYuNTkgOTQuNTQgMTMwLjg4IDk0LjU0Vjk0LjUzWk0xMjkuNjIgOTEuNDRDMTM2Ljg3IDkyLjEzIDE0MC41NCA4Ny4wOCAxNDEuODMgODQuNzVDMTQ0LjIzIDgwLjQxIDE0NC41IDc0Ljg4IDE0Mi40MiA3Mi42NkMxMzkuMDUgNjkuMDcgMTM0LjY0IDcxLjg1IDEzMy4yIDcyLjkzQzEzMi44NiA3Ny43NiAxMzAuNTcgODcuNTQgMTI5LjYyIDkxLjQzVjkxLjQ0WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNMTM1IDgzLjE0MDFDMTM0Ljg2IDgzLjE0MDEgMTM0LjcyIDgzLjEyMDEgMTM0LjU3IDgzLjA4MDFDMTMzLjc2IDgyLjg0MDEgMTMzLjMgODIuMDAwMSAxMzMuNTQgODEuMjAwMUMxMzUuNDcgNzQuNTgwMSAxMzkuODUgNzQuMzAwMSAxNDAuMDQgNzQuMjkwMUMxNDAuODggNzQuMjUwMSAxNDEuNTkgNzQuOTAwMSAxNDEuNjMgNzUuNzQwMUMxNDEuNjcgNzYuNTcwMSAxNDEuMDQgNzcuMjcwMSAxNDAuMjIgNzcuMzMwMUMxNDAuMDYgNzcuMzUwMSAxMzcuNzMgNzcuNzAwMSAxMzYuNDYgODIuMDYwMUMxMzYuMjcgODIuNzIwMSAxMzUuNjYgODMuMTUwMSAxMzUgODMuMTUwMVY4My4xNDAxWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNNzUuMjcgNzkuNDZDNzcuNDA3NCA3OS40NiA3OS4xNCA3Ny42NzgxIDc5LjE0IDc1LjQ4Qzc5LjE0IDczLjI4MTkgNzcuNDA3NCA3MS41IDc1LjI3IDcxLjVDNzMuMTMyNyA3MS41IDcxLjQgNzMuMjgxOSA3MS40IDc1LjQ4QzcxLjQgNzcuNjc4MSA3My4xMzI3IDc5LjQ2IDc1LjI3IDc5LjQ2WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTYuOTggMTQ5LjYxQzk2Ljk4IDE1MS44MSA5NS4yNSAxNTMuNTkgOTMuMTEgMTUzLjU5QzkwLjk3IDE1My41OSA4OS4yNCAxNTEuODEgODkuMjQgMTQ5LjYxQzg5LjI0IDE0Ny40MSA5MC45NyAxNDUuNjMgOTMuMTEgMTQ1LjYzQzk1LjI1IDE0NS42MyA5Ni45OCAxNDcuNDEgOTYuOTggMTQ5LjYxWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTYuOTggMTY4LjkyQzk2Ljk4IDE3MS4xMiA5NS4yNSAxNzIuOSA5My4xMSAxNzIuOUM5MC45NyAxNzIuOSA4OS4yNCAxNzEuMTIgODkuMjQgMTY4LjkyQzg5LjI0IDE2Ni43MiA5MC45NyAxNjQuOTQgOTMuMTEgMTY0Ljk0Qzk1LjI1IDE2NC45NCA5Ni45OCAxNjYuNzIgOTYuOTggMTY4LjkyWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNMTE0LjgyIDc1LjQ4QzExNC44MiA3Ny42OCAxMTMuMDkgNzkuNDYgMTEwLjk1IDc5LjQ2QzEwOC44MSA3OS40NiAxMDcuMDggNzcuNjggMTA3LjA4IDc1LjQ4QzEwNy4wOCA3My4yOCAxMDguODEgNzEuNSAxMTAuOTUgNzEuNUMxMTMuMDkgNzEuNSAxMTQuODIgNzMuMjggMTE0LjgyIDc1LjQ4WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTUuNjYgOTEuMTE5OUM5My4wNiA5MS4xMTk5IDkxLjEzIDkwLjI5OTkgODkuODkgODguNjY5OUM4OC4zNCA4Ni42Mjk5IDg4LjA3IDgzLjQ5OTkgODkuMDggNzkuMzY5OUM4OS43OCA3Ni40ODk5IDkwLjg2IDc0LjE1OTkgOTAuOTEgNzQuMDU5OUM5MS4yNiA3My4yOTk5IDkyLjE3IDcyLjk2OTkgOTIuOTMgNzMuMzE5OUM5My42OSA3My42Njk5IDk0LjAyIDc0LjU3OTkgOTMuNjcgNzUuMzM5OUM5Mi42OCA3Ny40Nzk5IDkwLjMgODQuMTc5OSA5Mi4zMiA4Ni44Mjk5QzkzLjIgODcuOTc5OSA5NSA4OC4zMzk5IDk3LjY5IDg3Ljg4OTlDOTguNTIgODcuNzQ5OSA5OS4zIDg4LjMwOTkgOTkuNDQgODkuMTM5OUM5OS41OCA4OS45Njk5IDk5LjAyIDkwLjc0OTkgOTguMTkgOTAuODg5OUM5Ny4yOSA5MS4wMzk5IDk2LjQ1IDkxLjEwOTkgOTUuNjcgOTEuMTA5OUw5NS42NiA5MS4xMTk5WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTMuMTUgMTAwLjU5Qzg2LjMxIDEwMC41OSA4Mi40NCA5NS43MzAxIDgyLjM4IDk1LjY1MDFDODEuODcgOTQuOTkwMSA4MS45OSA5NC4wMzAxIDgyLjY1IDkzLjUyMDFDODMuMzEgOTMuMDEwMSA4NC4yNiA5My4xMzAxIDg0Ljc4IDkzLjc5MDFDODUuMDYgOTQuMTUwMSA5MS42NiAxMDIuMjUgMTAzLjQ0IDkzLjUwMDFDMTA0LjExIDkzLjAwMDEgMTA1LjA3IDkzLjE0MDEgMTA1LjU3IDkzLjgxMDFDMTA2LjA3IDk0LjQ4MDEgMTA1LjkzIDk1LjQ0MDEgMTA1LjI2IDk1Ljk0MDFDMTAwLjU4IDk5LjQyMDEgOTYuNTEgMTAwLjU4IDkzLjE1IDEwMC41OFYxMDAuNTlaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik05Ni45NCAxMDUuODdDOTYuNjQgMTA1Ljg3IDk2LjM0IDEwNS43OCA5Ni4wOCAxMDUuNkM5NC4xNSAxMDQuMjcgOTAuOTcgMTA1LjI0IDg5LjkxIDEwNS43M0M4OS4xNSAxMDYuMDggODguMjUgMTA1Ljc1IDg3LjkgMTA0Ljk5Qzg3LjU1IDEwNC4yMyA4Ny44OCAxMDMuMzMgODguNjQgMTAyLjk4Qzg4Ljg2IDEwMi44OCA5NC4wNSAxMDAuNTEgOTcuODEgMTAzLjExQzk4LjUgMTAzLjU5IDk4LjY3IDEwNC41MyA5OC4yIDEwNS4yMkM5Ny45MSAxMDUuNjUgOTcuNDMgMTA1Ljg4IDk2Ljk1IDEwNS44OEw5Ni45NCAxMDUuODdaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik03OS4xMSA2MS41Mzk5Qzc4LjgxIDYxLjUzOTkgNzguNTEgNjEuNDQ5OSA3OC4yNSA2MS4yNjk5Qzc2LjMyIDU5LjkzOTkgNzMuMTQgNjAuOTA5OSA3Mi4wOCA2MS4zOTk5QzcxLjMyIDYxLjc0OTkgNzAuNDIgNjEuNDE5OSA3MC4wNyA2MC42NTk5QzY5LjcyIDU5Ljg5OTkgNzAuMDUgNTguOTk5OSA3MC44MSA1OC42NDk5QzcxLjAzIDU4LjU0OTkgNzYuMjIgNTYuMTc5OSA3OS45OCA1OC43Nzk5QzgwLjY3IDU5LjI1OTkgODAuODQgNjAuMTk5OSA4MC4zNyA2MC44ODk5QzgwLjA4IDYxLjMxOTkgNzkuNiA2MS41NDk5IDc5LjEyIDYxLjU0OTlMNzkuMTEgNjEuNTM5OVoiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTExMy42OSA2Mi4wMjAxQzExMy4zOSA2Mi4wMjAxIDExMy4wOSA2MS45MzAxIDExMi44MyA2MS43NTAxQzExMC45IDYwLjQyMDEgMTA3LjcyIDYxLjM5MDEgMTA2LjY2IDYxLjg4MDFDMTA1LjkgNjIuMjMwMSAxMDUgNjEuOTAwMSAxMDQuNjUgNjEuMTQwMUMxMDQuMyA2MC4zODAxIDEwNC42MyA1OS40ODAxIDEwNS4zOSA1OS4xMzAxQzEwNS42MSA1OS4wMzAxIDExMC44IDU2LjY2MDEgMTE0LjU2IDU5LjI2MDFDMTE1LjI1IDU5Ljc0MDEgMTE1LjQyIDYwLjY4MDEgMTE0Ljk1IDYxLjM3MDFDMTE0LjY2IDYxLjgwMDEgMTE0LjE4IDYyLjAzMDEgMTEzLjcgNjIuMDMwMUwxMTMuNjkgNjIuMDIwMVoiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTg3LjMxIDEyMS4yMUM4Ny4zMSAxMjEuMjEgODcuMjEgMTIxLjIxIDg3LjE2IDEyMS4yMUM4MC4yNyAxMjAuNTMgNzYuMDMgMTE3IDc1Ljg1IDExNi44NUM3NS4yMSAxMTYuMzEgNzUuMTMgMTE1LjM1IDc1LjY3IDExNC43MUM3Ni4yMSAxMTQuMDcgNzcuMTcgMTEzLjk5IDc3LjgxIDExNC41M0M3Ny44NyAxMTQuNTggODEuNTcgMTE3LjYxIDg3LjQ1IDExOC4xOUM4OC4yOSAxMTguMjcgODguOSAxMTkuMDIgODguODEgMTE5Ljg1Qzg4LjczIDEyMC42MyA4OC4wNyAxMjEuMjIgODcuMyAxMjEuMjJMODcuMzEgMTIxLjIxWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTkuODggMTIxLjIxQzk5LjExIDEyMS4yMSA5OC40NSAxMjAuNjIgOTguMzcgMTE5Ljg0Qzk4LjI5IDExOS4wMSA5OC45IDExOC4yNiA5OS43MyAxMTguMThDOTkuODMgMTE4LjE3IDEwNi4wNiAxMTcuNSAxMDkuNjEgMTE0LjI3QzExMC4yMyAxMTMuNzEgMTExLjE5IDExMy43NSAxMTEuNzYgMTE0LjM3QzExMi4zMiAxMTQuOTkgMTEyLjI4IDExNS45NSAxMTEuNjYgMTE2LjUyQzEwNy4zNCAxMjAuNDQgMTAwLjMzIDEyMS4xNyAxMDAuMDMgMTIxLjJDOTkuOTggMTIxLjIgOTkuOTMgMTIxLjIgOTkuODggMTIxLjJWMTIxLjIxWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNNzUuMjcgODcuODYwMUM2OC40NCA4Ny44NjAxIDYyLjg5IDgyLjMwMDEgNjIuODkgNzUuNDgwMUM2Mi44OSA2OC42NjAxIDY4LjQ1IDYzLjEwMDEgNzUuMjcgNjMuMTAwMUM4Mi4wOSA2My4xMDAxIDg3LjY1IDY4LjY2MDEgODcuNjUgNzUuNDgwMUM4Ny42NSA4Mi4zMDAxIDgyLjA5IDg3Ljg2MDEgNzUuMjcgODcuODYwMVpNNzUuMjcgNjYuMTMwMUM3MC4xMiA2Ni4xMzAxIDY1LjkzIDcwLjMyMDEgNjUuOTMgNzUuNDcwMUM2NS45MyA4MC42MjAxIDcwLjEyIDg0LjgxMDEgNzUuMjcgODQuODEwMUM4MC40MiA4NC44MTAxIDg0LjYxIDgwLjYyMDEgODQuNjEgNzUuNDcwMUM4NC42MSA3MC4zMjAxIDgwLjQyIDY2LjEzMDEgNzUuMjcgNjYuMTMwMVoiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTExMC45NSA4Ny44NjAxQzEwNC4xMiA4Ny44NjAxIDk4LjU2OTkgODIuMzAwMSA5OC41Njk5IDc1LjQ4MDFDOTguNTY5OSA2OC42NjAxIDEwNC4xMiA2My4xMDAxIDExMC45NSA2My4xMDAxQzExNy43OCA2My4xMDAxIDEyMy4zMyA2OC42NjAxIDEyMy4zMyA3NS40ODAxQzEyMy4zMyA4Mi4zMDAxIDExNy43NyA4Ny44NjAxIDExMC45NSA4Ny44NjAxWk0xMTAuOTUgNjYuMTMwMUMxMDUuOCA2Ni4xMzAxIDEwMS42MSA3MC4zMjAxIDEwMS42MSA3NS40NzAxQzEwMS42MSA4MC42MjAxIDEwNS44IDg0LjgxMDEgMTEwLjk1IDg0LjgxMDFDMTE2LjEgODQuODEwMSAxMjAuMjkgODAuNjIwMSAxMjAuMjkgNzUuNDcwMUMxMjAuMjkgNzAuMzIwMSAxMTYuMSA2Ni4xMzAxIDExMC45NSA2Ni4xMzAxWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNMTAwLjEyIDc2LjIxOTlDOTkuOTggNzYuMjE5OSA5OS44MyA3Ni4xOTk5IDk5LjY5IDc2LjE1OTlDOTAuOTIgNzMuNTY5OSA4Ni45OCA3NS45NDk5IDg2Ljk0IDc1Ljk3OTlDODYuMjQgNzYuNDE5OSA4NS4zIDc2LjIxOTkgODQuODUgNzUuNTI5OUM4NC40IDc0LjgyOTkgODQuNTggNzMuOTA5OSA4NS4yNyA3My40NDk5Qzg1LjQ3IDczLjMxOTkgOTAuMjcgNzAuMjA5OSAxMDAuNTYgNzMuMjU5OUMxMDEuMzYgNzMuNDk5OSAxMDEuODIgNzQuMzM5OSAxMDEuNTkgNzUuMTQ5OUMxMDEuMzkgNzUuODA5OSAxMDAuNzkgNzYuMjM5OSAxMDAuMTMgNzYuMjM5OUwxMDAuMTIgNzYuMjE5OVoiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTQ0LjMyIDMwNC41N0M0My41OCAzMDQuNTcgNDIuOTMgMzA0LjAzIDQyLjgyIDMwMy4yN0wyOS44MyAyMTMuODVDMjkuNzEgMjEzLjAyIDMwLjI4IDIxMi4yNSAzMS4xMiAyMTIuMTNDMzEuOTUgMjEyLjAyIDMyLjcyIDIxMi41OCAzMi44NCAyMTMuNDJMNDUuODMgMzAyLjg0QzQ1Ljk1IDMwMy42NyA0NS4zOCAzMDQuNDQgNDQuNTQgMzA0LjU2QzQ0LjQ3IDMwNC41NyA0NC4zOSAzMDQuNTggNDQuMzIgMzA0LjU4VjMwNC41N1oiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTkyLjM0IDI3Ni45NEM5MS44NSAyNzYuOTQgOTEuMzggMjc2LjcxIDkxLjA5IDI3Ni4yOEM4OS4zIDI3My42OCA0Ny4yNCAyMTIuMzUgNDguMTEgMTk3Ljc5QzQ4Ljc3IDE4Ni43MSA1MS45NCAxNzMuOTcgNTMuNCAxNjguNTVMNDIuOTQgMTcxLjUxQzQyLjM5IDE3MS42NiA0MS44MSAxNzEuNTEgNDEuNDIgMTcxLjA5QzQxLjAzIDE3MC42OCA0MC45MSAxNzAuMDggNDEuMDkgMTY5LjU0QzQxLjQ4IDE2OC40MyA1MC44MiAxNDIuMjUgNjUuMjcgMTI5LjgxQzY1LjQ3IDEyOS42NCA2NS43IDEyOS41MyA2NS45NSAxMjkuNDdMNzIuODUgMTI4LjA1QzczLjM4IDEyNy45NCA3My45MyAxMjguMTIgNzQuMjkgMTI4LjUzQzc0LjY1IDEyOC45NCA3NC43NyAxMjkuNSA3NC41OSAxMzAuMDJDNzQuNTUgMTMwLjE1IDcwLjE1IDE0My42NiA3MC4zMiAxNjguMTVDNzAuNDggMTkwLjc2IDc0LjY2IDIyNy42MyA5My43MyAyNzQuODVDOTQuMDIgMjc1LjU3IDkzLjczIDI3Ni4zOSA5My4wNCAyNzYuNzZDOTIuODEgMjc2Ljg4IDkyLjU2IDI3Ni45NCA5Mi4zMiAyNzYuOTRIOTIuMzRaTTU1LjU5IDE2NC44NEM1NS45OSAxNjQuODQgNTYuMzggMTY1IDU2LjY3IDE2NS4yOUM1Ny4wNiAxNjUuNjggNTcuMiAxNjYuMjYgNTcuMDUgMTY2Ljc5QzU3IDE2Ni45NiA1MS45OCAxODQuMTIgNTEuMTUgMTk3Ljk4QzUwLjU5IDIwNy4zMSA3MS45OCAyNDEuOTYgODYuMTMgMjYzLjQ0Qzc2LjggMjM3Ljc0IDY3LjUyIDIwMy4zNiA2Ny4zMSAxNjcuOTlDNjcuMiAxNDguODcgNjkuNzUgMTM2LjUyIDcxLjAzIDEzMS41NUw2Ni45NyAxMzIuMzhDNTUuOTYgMTQyLjA2IDQ3LjgzIDE2MC43MiA0NS4wMyAxNjcuNzdMNTUuMTggMTY0LjlDNTUuMzIgMTY0Ljg2IDU1LjQ2IDE2NC44NCA1NS41OSAxNjQuODRaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik0xNDAuNjcgMzA0LjU3QzE0MC42IDMwNC41NyAxNDAuNTIgMzA0LjU3IDE0MC40NSAzMDQuNTVDMTM5LjYyIDMwNC40MyAxMzkuMDQgMzAzLjY2IDEzOS4xNiAzMDIuODNMMTUyLjE1IDIxMy40MUMxNTIuMjcgMjEyLjU4IDE1My4wNCAyMTIuMDEgMTUzLjg3IDIxMi4xMkMxNTQuNyAyMTIuMjQgMTU1LjI4IDIxMy4wMSAxNTUuMTYgMjEzLjg0TDE0Mi4xNyAzMDMuMjZDMTQyLjA2IDMwNC4wMiAxNDEuNDEgMzA0LjU2IDE0MC42NyAzMDQuNTZWMzA0LjU3WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTIuMzM5OSAyNzYuOTRDOTIuMDk5OSAyNzYuOTQgOTEuODUgMjc2Ljg4IDkxLjYyIDI3Ni43NkM5MC45NCAyNzYuMzkgOTAuNjQgMjc1LjU3IDkwLjkzIDI3NC44NUMxMDEuNDUgMjQ4Ljc5IDExNC4wNyAyMDkuMTIgMTE0LjQyIDE2OC4xNUMxMTQuNjMgMTQzLjY2IDExMC4yOCAxMzAuMTUgMTEwLjI0IDEzMC4wMkMxMTAuMDcgMTI5LjUxIDExMC4xOSAxMjguOTQgMTEwLjU1IDEyOC41M0MxMTAuOTEgMTI4LjEyIDExMS40NiAxMjcuOTQgMTExLjk5IDEyOC4wNUwxMTguODkgMTI5LjQ3QzExOS4xNCAxMjkuNTIgMTE5LjM4IDEyOS42NCAxMTkuNTcgMTI5LjgxQzEzNC4wMyAxNDIuMjUgMTQzLjM2IDE2OC40MyAxNDMuNzUgMTY5LjU0QzE0My45NCAxNzAuMDggMTQzLjgxIDE3MC42NyAxNDMuNDIgMTcxLjA5QzE0My4wMyAxNzEuNSAxNDIuNDQgMTcxLjY3IDE0MS45IDE3MS41MUwxMzEuNDQgMTY4LjU1QzEzMi45IDE3My45NiAxMzYuMDYgMTg2LjcgMTM2LjczIDE5Ny43OUMxMzcuNiAyMTIuMzUgOTUuMzggMjczLjY4IDkzLjU4IDI3Ni4yOEM5My4yOSAyNzYuNyA5Mi44MSAyNzYuOTQgOTIuMzMgMjc2Ljk0SDkyLjMzOTlaTTExMy44MiAxMzEuNTRDMTE1LjA5IDEzNi41MSAxMTcuNjEgMTQ4Ljg3IDExNy40NiAxNjcuOTlDMTE3LjMgMTg4Ljg2IDExMy43NSAyMjEuNzEgOTguNTQgMjYzLjUxQzExMi43NCAyNDIuMDQgMTM0LjI2IDIwNy4zMSAxMzMuNyAxOTcuOThDMTMyLjg3IDE4NC4xMiAxMjcuODUgMTY2Ljk2IDEyNy44IDE2Ni43OUMxMjcuNjQgMTY2LjI2IDEyNy43OSAxNjUuNjkgMTI4LjE4IDE2NS4yOUMxMjguNTcgMTY0LjkgMTI5LjE0IDE2NC43NSAxMjkuNjcgMTY0LjlMMTM5LjgyIDE2Ny43N0MxMzcuMDIgMTYwLjcyIDEyOC44OSAxNDIuMDYgMTE3Ljg4IDEzMi4zOEwxMTMuODIgMTMxLjU0WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTIuMzM5OSAzMDQuNTdDOTEuNDk5OSAzMDQuNTcgOTAuODE5OSAzMDMuODkgOTAuODE5OSAzMDMuMDVWMjc1LjQyQzkwLjgxOTkgMjc0LjU4IDkxLjQ5OTkgMjczLjkgOTIuMzM5OSAyNzMuOUM5My4xNzk5IDI3My45IDkzLjg1OTkgMjc0LjU4IDkzLjg1OTkgMjc1LjQyVjMwMy4wNUM5My44NTk5IDMwMy44OSA5My4xNzk5IDMwNC41NyA5Mi4zMzk5IDMwNC41N1oiIGZpbGw9IiM1QUIwQzAiLz4KPC9nPgo8ZGVmcz4KPGNsaXBQYXRoIGlkPSJjbGlwMF8xMjhfMTA1NCI+CjxyZWN0IHdpZHRoPSIxODQuNjgiIGhlaWdodD0iMzA0LjU3IiBmaWxsPSJ3aGl0ZSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=",
   "first-time-employee.svg": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjM3IiBoZWlnaHQ9IjMyMSIgdmlld0JveD0iMCAwIDIzNyAzMjEiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF8xMjhfMTA1MykiPgo8cGF0aCBkPSJNOTguMzIgMTA5Ljk0Qzk4LjMyIDEwOS45NCA2Ny4yMiA4OS44NiA2NS41NCA0My40OUM2My44NyAtMi44Nzk5OCAxMDUuMDggLTQuOTg5OTggMTE2LjY5IDQuNTkwMDJDMTE2LjY5IDQuNTkwMDIgMTM3LjMzIC01LjYyOTk4IDE1Ny41OCA4LjEzMDAyQzE3Ny44MyAyMS44OCAxNzIuMTkgODUuNyAxMzUuMjUgMTA5Ljk0SDk4LjMyWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNMjM0LjkzIDMxOS4wMkMyMzQuOTMgMzE5LjAyIDIyMC4xIDIxOS4wOCAyMTAuNDMgMTg0LjEzQzIwMC43NiAxNDkuMTggMTQyLjg1IDEzMC42NyAxNDIuODUgMTMwLjY3QzE0MC40MiAxMzEuODEgMTM3LjUxIDEzMy45MyAxMzUuNDkgMTM0Ljk1QzEyNC4zNiAxNDAuNTkgMTExLjE4IDE0MC40IDEwMC4yMyAxMzQuNDRDOTguMDQgMTMzLjI1IDk0Ljc3IDEzMS40NiA5MS45NiAxMzAuMTRDOTEuOTYgMTMwLjE0IDMxLjk1IDE0OS4xNyAyMi4yOCAxODQuMTNDMTIuNjIgMjE5LjA4IDEuNTIwMDIgMzE5LjAyIDEuNTIwMDIgMzE5LjAySDIzNC45M1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yMzQuOTMgMzIwLjU0SDEuNTIwMDJDMS4wOTAwMiAzMjAuNTQgMC42ODAwMjMgMzIwLjM2IDAuMzkwMDIzIDMyMC4wM0MwLjEwMDAyMyAzMTkuNzEgLTAuMDM5OTc3NSAzMTkuMjggMC4wMTAwMjI1IDMxOC44NUMwLjEyMDAyMyAzMTcuODUgMTEuMjMgMjE4LjM5IDIwLjgyIDE4My43MkMyNC45NCAxNjguODIgMzguMTIgMTU1LjAyIDYwIDE0Mi43Qzc2LjE2IDEzMy42IDkxLjM1IDEyOC43NCA5MS41IDEyOC42OUM5MS44NiAxMjguNTggOTIuMjYgMTI4LjYgOTIuNiAxMjguNzZDOTUuMzMgMTMwLjA0IDk4LjQyIDEzMS43MiAxMDAuNjcgMTMyLjk1TDEwMC45NSAxMzMuMUMxMTEuNDYgMTM4LjgyIDEyNC4xMSAxMzkuMDEgMTM0LjggMTMzLjU5QzEzNS42MyAxMzMuMTcgMTM2LjY3IDEzMi41MiAxMzcuNzYgMTMxLjg0QzEzOS4yNCAxMzAuOTIgMTQwLjc2IDEyOS45NiAxNDIuMiAxMjkuMjlDMTQyLjU1IDEyOS4xMyAxNDIuOTQgMTI5LjEgMTQzLjMxIDEyOS4yMkMxNDMuNDYgMTI5LjI3IDE1OC4xMiAxMzQgMTczLjc3IDE0Mi45N0MxODguMzMgMTUxLjMyIDIwNi43NiAxNjUuMTcgMjExLjkgMTgzLjcyQzIyMS40OCAyMTguMzYgMjM2LjI5IDMxNy43OSAyMzYuNDQgMzE4LjhDMjM2LjUgMzE5LjI0IDIzNi4zOCAzMTkuNjggMjM2LjA5IDMyMC4wMkMyMzUuOCAzMjAuMzUgMjM1LjM4IDMyMC41NSAyMzQuOTQgMzIwLjU1TDIzNC45MyAzMjAuNTRaTTMuMjIwMDIgMzE3LjVIMjMzLjE3QzIzMS4xNCAzMDQuMDMgMjE3LjggMjE2LjQ3IDIwOC45NyAxODQuNTNDMjA0LjEyIDE2Ni45OSAxODYuMzYgMTUzLjcgMTcyLjMxIDE0NS42M0MxNTguNjcgMTM3LjggMTQ1Ljc5IDEzMy4yNiAxNDIuOTYgMTMyLjNDMTQxLjgzIDEzMi44OCAxNDAuNTggMTMzLjY2IDEzOS4zOCAxMzQuNDFDMTM4LjIyIDEzNS4xMyAxMzcuMTMgMTM1LjgyIDEzNi4xOCAxMzYuM0MxMjQuNiAxNDIuMTYgMTEwLjg5IDE0MS45NiA5OS41IDEzNS43Nkw5OS4yMiAxMzUuNjFDOTcuMTUgMTM0LjQ4IDk0LjM3IDEzMi45NyA5MS44NSAxMzEuNzZDODguOTggMTMyLjcyIDc1LjU5IDEzNy4zOSA2MS40NCAxNDUuMzZDNDYuOTIgMTUzLjU0IDI4LjU5IDE2Ni45OCAyMy43NCAxODQuNTJDMTQuOSAyMTYuNDcgNC43MjAwMiAzMDQuMiAzLjIxMDAyIDMxNy40OUwzLjIyMDAyIDMxNy41WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNMTIxLjM5IDE1MS43MkMxMjEuMzkgMTU0LjI4IDExOS4zMiAxNTYuMzUgMTE2Ljc2IDE1Ni4zNUMxMTQuMiAxNTYuMzUgMTEyLjEzIDE1NC4yOCAxMTIuMTMgMTUxLjcyQzExMi4xMyAxNDkuMTYgMTE0LjIgMTQ3LjA5IDExNi43NiAxNDcuMDlDMTE5LjMyIDE0Ny4wOSAxMjEuMzkgMTQ5LjE2IDEyMS4zOSAxNTEuNzJaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik0xMjEuMzkgMTcwLjczQzEyMS4zOSAxNzMuMjkgMTE5LjMyIDE3NS4zNiAxMTYuNzYgMTc1LjM2QzExNC4yIDE3NS4zNiAxMTIuMTMgMTczLjI5IDExMi4xMyAxNzAuNzNDMTEyLjEzIDE2OC4xNyAxMTQuMiAxNjYuMSAxMTYuNzYgMTY2LjFDMTE5LjMyIDE2Ni4xIDEyMS4zOSAxNjguMTcgMTIxLjM5IDE3MC43M1oiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTEyMS4zOSAxOTAuNjVDMTIxLjM5IDE5My4yMSAxMTkuMzIgMTk1LjI4IDExNi43NiAxOTUuMjhDMTE0LjIgMTk1LjI4IDExMi4xMyAxOTMuMjEgMTEyLjEzIDE5MC42NUMxMTIuMTMgMTg4LjA5IDExNC4yIDE4Ni4wMiAxMTYuNzYgMTg2LjAyQzExOS4zMiAxODYuMDIgMTIxLjM5IDE4OC4wOSAxMjEuMzkgMTkwLjY1WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTkuOTggMjA4LjU1SDU0Ljk3VjIzNC42Nkg5OS45OFYyMDguNTVaIiBmaWxsPSIjRUNGNkY4Ii8+CjxwYXRoIGQ9Ik05OS45OSAyMzYuMThINTQuOThDNTQuMTQgMjM2LjE4IDUzLjQ2IDIzNS41IDUzLjQ2IDIzNC42NlYyMDguNTVDNTMuNDYgMjA3LjcxIDU0LjE0IDIwNy4wMyA1NC45OCAyMDcuMDNIOTkuOTlDMTAwLjgzIDIwNy4wMyAxMDEuNTEgMjA3LjcxIDEwMS41MSAyMDguNTVWMjM0LjY2QzEwMS41MSAyMzUuNSAxMDAuODMgMjM2LjE4IDk5Ljk5IDIzNi4xOFpNNTYuNDkgMjMzLjE0SDk4LjQ3VjIxMC4wN0g1Ni40OVYyMzMuMTRaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik03My43MSAyMTQuMzNINjAuMzlWMjI4Ljg4SDczLjcxVjIxNC4zM1oiIGZpbGw9IiNFQ0Y2RjgiLz4KPHBhdGggZD0iTTczLjcxIDIzMC40SDYwLjM5QzU5LjU1IDIzMC40IDU4Ljg3IDIyOS43MiA1OC44NyAyMjguODhWMjE0LjMzQzU4Ljg3IDIxMy40OSA1OS41NSAyMTIuODEgNjAuMzkgMjEyLjgxSDczLjcxQzc0LjU1IDIxMi44MSA3NS4yMyAyMTMuNDkgNzUuMjMgMjE0LjMzVjIyOC44OEM3NS4yMyAyMjkuNzIgNzQuNTUgMjMwLjQgNzMuNzEgMjMwLjRaTTYxLjkxIDIyNy4zNkg3Mi4xOVYyMTUuODVINjEuOTFWMjI3LjM2WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTUuNjEgMjE1Ljg1SDc3LjQ3Qzc2LjYzIDIxNS44NSA3NS45NSAyMTUuMTcgNzUuOTUgMjE0LjMzQzc1Ljk1IDIxMy40OSA3Ni42MyAyMTIuODEgNzcuNDcgMjEyLjgxSDk1LjYxQzk2LjQ1IDIxMi44MSA5Ny4xMyAyMTMuNDkgOTcuMTMgMjE0LjMzQzk3LjEzIDIxNS4xNyA5Ni40NSAyMTUuODUgOTUuNjEgMjE1Ljg1WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNOTUuNjEgMjMwLjRINzcuNDdDNzYuNjMgMjMwLjQgNzUuOTUgMjI5LjcyIDc1Ljk1IDIyOC44OEM3NS45NSAyMjguMDQgNzYuNjMgMjI3LjM2IDc3LjQ3IDIyNy4zNkg5NS42MUM5Ni40NSAyMjcuMzYgOTcuMTMgMjI4LjA0IDk3LjEzIDIyOC44OEM5Ny4xMyAyMjkuNzIgOTYuNDUgMjMwLjQgOTUuNjEgMjMwLjRaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik05NS42MSAyMjMuMTJINzcuNDdDNzYuNjMgMjIzLjEyIDc1Ljk1IDIyMi40NCA3NS45NSAyMjEuNkM3NS45NSAyMjAuNzYgNzYuNjMgMjIwLjA4IDc3LjQ3IDIyMC4wOEg5NS42MUM5Ni40NSAyMjAuMDggOTcuMTMgMjIwLjc2IDk3LjEzIDIyMS42Qzk3LjEzIDIyMi40NCA5Ni40NSAyMjMuMTIgOTUuNjEgMjIzLjEyWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNODAuNTQgMTk5LjY3SDczLjcxVjIxMC44OUg4MC41NFYxOTkuNjdaIiBmaWxsPSIjRUNGNkY4Ii8+CjxwYXRoIGQ9Ik04MC41NCAyMTIuNEg3My43MUM3Mi44NyAyMTIuNCA3Mi4xOSAyMTEuNzIgNzIuMTkgMjEwLjg4VjE5OS42NkM3Mi4xOSAxOTguODIgNzIuODcgMTk4LjE0IDczLjcxIDE5OC4xNEg4MC41NEM4MS4zOCAxOTguMTQgODIuMDYgMTk4LjgyIDgyLjA2IDE5OS42NlYyMTAuODhDODIuMDYgMjExLjcyIDgxLjM4IDIxMi40IDgwLjU0IDIxMi40Wk03NS4yMyAyMDkuMzZINzkuMDNWMjAxLjE4SDc1LjIzVjIwOS4zNloiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTUxLjI5IDMyMC41NEM1MC40OCAzMjAuNTQgNDkuODEgMzE5LjkgNDkuNzcgMzE5LjA5TDQ0LjU2IDE5OS43NEM0NC41MiAxOTguOSA0NS4xNyAxOTguMTkgNDYuMDEgMTk4LjE2QzQ2Ljg0IDE5OC4xMSA0Ny41NiAxOTguNzcgNDcuNTkgMTk5LjYxTDUyLjggMzE4Ljk2QzUyLjg0IDMxOS44IDUyLjE5IDMyMC41MSA1MS4zNSAzMjAuNTRDNTEuMzMgMzIwLjU0IDUxLjMgMzIwLjU0IDUxLjI4IDMyMC41NEg1MS4yOVoiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTE4MS40MyAzMjAuNTRDMTgxLjQzIDMyMC41NCAxODEuMzkgMzIwLjU0IDE4MS4zNiAzMjAuNTRDMTgwLjUyIDMyMC41IDE3OS44NyAzMTkuNzkgMTc5LjkxIDMxOC45NkwxODUuMTIgMTk5LjYxQzE4NS4xNiAxOTguNzcgMTg1Ljg2IDE5OC4xMiAxODYuNyAxOTguMTZDMTg3LjU0IDE5OC4yIDE4OC4xOSAxOTguOTEgMTg4LjE1IDE5OS43NEwxODIuOTQgMzE5LjA5QzE4Mi45IDMxOS45MSAxODIuMjMgMzIwLjU0IDE4MS40MiAzMjAuNTRIMTgxLjQzWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNMTM0LjM5IDExOC41OEwxMzYuNDMgMTAxLjAyTDExNy4yMyAxMDcuNzdMOTguMDMgMTAxLjAyTDEwMC4wMiAxMTguMTlDMTAwLjY1IDEyMy42MiA5Ny4yMyAxMjguNjkgOTEuOTYgMTMwLjE0QzkxLjk2IDEzMC4xNCAxMDMuNDIgMTM5LjYzIDExOC4yMiAxMzkuMDVDMTMzLjAyIDEzOC40NiAxNDIuODUgMTMwLjY3IDE0Mi44NSAxMzAuNjdMMTQyIDEzMC40QzEzNi45NiAxMjguNzkgMTMzLjc3IDEyMy44NCAxMzQuMzggMTE4LjU4SDEzNC4zOVoiIGZpbGw9IiNFQ0Y2RjgiLz4KPHBhdGggZD0iTTExNi44OSAxNDAuNTlDMTAyLjM3IDE0MC41OSA5MS40NyAxMzEuNyA5MSAxMzEuMzFDOTAuNTYgMTMwLjk1IDkwLjM2IDEzMC4zNyA5MC40OCAxMjkuODJDOTAuNiAxMjkuMjcgOTEuMDIgMTI4LjgyIDkxLjU2IDEyOC42N0M5Ni4xNCAxMjcuNDEgOTkuMDYgMTIzLjA4IDk4LjUxIDExOC4zNkw5Ni41MiAxMDEuMTlDOTYuNDYgMTAwLjY3IDk2LjY3IDEwMC4xNSA5Ny4wOCA5OS44Mjk5Qzk3LjQ5IDk5LjQ5OTkgOTguMDQgOTkuNDA5OSA5OC41MyA5OS41Nzk5TDExNy4yMyAxMDYuMTZMMTM1LjkzIDk5LjU3OTlDMTM2LjQyIDk5LjQwOTkgMTM2Ljk3IDk5LjQ5OTkgMTM3LjM4IDk5LjgyOTlDMTM3Ljc5IDEwMC4xNiAxMzggMTAwLjY3IDEzNy45NCAxMDEuMTlMMTM1LjkgMTE4Ljc1QzEzNS4zOCAxMjMuMjcgMTM4LjE0IDEyNy41NiAxNDIuNDcgMTI4Ljk0TDE0My4zMSAxMjkuMjFDMTQzLjg0IDEyOS4zOCAxNDQuMjQgMTI5LjgzIDE0NC4zNCAxMzAuMzlDMTQ0LjQ0IDEzMC45NCAxNDQuMjMgMTMxLjUgMTQzLjc5IDEzMS44NUMxNDMuMzcgMTMyLjE4IDEzMy40IDEzOS45NSAxMTguMjggMTQwLjU1QzExNy44MSAxNDAuNTcgMTE3LjM0IDE0MC41OCAxMTYuODggMTQwLjU4TDExNi44OSAxNDAuNTlaTTk1LjA5IDEzMC41MUM5OC45OSAxMzMuMDggMTA3Ljc4IDEzNy45NCAxMTguMTcgMTM3LjUzQzEyOC4yIDEzNy4xMyAxMzUuOTMgMTMzLjI2IDEzOS41OSAxMzEuMDNDMTM1LjAzIDEyOC42NiAxMzIuMjcgMTIzLjY1IDEzMi44OCAxMTguNEwxMzQuNjQgMTAzLjI2TDExNy43MyAxMDkuMjFDMTE3LjQgMTA5LjMyIDExNy4wNSAxMDkuMzIgMTE2LjcyIDEwOS4yMUw5OS44MSAxMDMuMjZMMTAxLjUyIDExOC4wMUMxMDIuMTMgMTIzLjIzIDk5LjUgMTI4LjEgOTUuMDcgMTMwLjUxSDk1LjA5WiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNODAuNjcgNjguMjIwMUM4MC42NyA2OC4yMjAxIDc0IDU4LjU1MDEgNjcuMTMgNjUuNjIwMUM2MC4yNiA3Mi42OTAxIDc3LjQ5IDkxLjkzMDEgODUuNTcgODQuNzcwMUM5My42NSA3Ny42MTAxIDgwLjY3IDY4LjIyMDEgODAuNjcgNjguMjIwMVoiIGZpbGw9IiNFQ0Y2RjgiLz4KPHBhdGggZD0iTTgxLjM4IDg3Ljg3MDFDNzcuNDYgODcuODcwMSA3My4xNyA4NS4yNzAxIDY5Ljg4IDgxLjgzMDFDNjQuOCA3Ni41MTAxIDYxLjg1IDY4Ljg3MDEgNjYuMDUgNjQuNTYwMUM2OC4yMSA2Mi4zNDAxIDcwLjU5IDYxLjMzMDEgNzMuMTUgNjEuNTQwMUM3Ny42NSA2MS45MjAxIDgxLjAyIDY2LjExMDEgODEuNzggNjcuMTQwMUM4My4wNCA2OC4xMDAxIDg5LjQ2IDczLjI0MDEgODkuNzQgNzkuMDQwMUM4OS44NyA4MS42MzAxIDg4LjgxIDgzLjk0MDEgODYuNTkgODUuOTEwMUM4NS4wNCA4Ny4yODAxIDgzLjI2IDg3Ljg3MDEgODEuMzkgODcuODcwMUg4MS4zOFpNNzIuNDggNjQuNTYwMUM3MSA2NC41NjAxIDY5LjYxIDY1LjI2MDEgNjguMjIgNjYuNjkwMUM2NS40IDY5LjU5MDEgNjguMSA3NS41ODAxIDcyLjA3IDc5Ljc0MDFDNzUuOCA4My42NTAxIDgxLjMgODYuNTMwMSA4NC41NiA4My42NDAxQzg2LjA3IDgyLjMwMDEgODYuNzcgODAuODUwMSA4Ni42OSA3OS4yMDAxQzg2LjQ5IDc1LjE4MDEgODEuNjMgNzAuODAwMSA3OS43NyA2OS40NTAxQzc5LjYzIDY5LjM1MDEgNzkuNTEgNjkuMjIwMSA3OS40MSA2OS4wODAxQzc5LjM4IDY5LjA0MDEgNzYuNDQgNjQuODYwMSA3Mi44NiA2NC41NzAxQzcyLjczIDY0LjU2MDEgNzIuNiA2NC41NTAxIDcyLjQ3IDY0LjU1MDFMNzIuNDggNjQuNTYwMVoiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTE1My43OSA2OC4yMjAxQzE1My43OSA2OC4yMjAxIDE2MC40NiA1OC41NTAxIDE2Ny4zMyA2NS42MjAxQzE3NC4yIDcyLjY5MDEgMTU2Ljk3IDkxLjkzMDEgMTQ4Ljg5IDg0Ljc3MDFDMTQwLjgxIDc3LjYxMDEgMTUzLjc5IDY4LjIyMDEgMTUzLjc5IDY4LjIyMDFaIiBmaWxsPSIjRUNGNkY4Ii8+CjxwYXRoIGQ9Ik0xNTMuMDggODcuODcwMUMxNTEuMjEgODcuODcwMSAxNDkuNDMgODcuMjgwMSAxNDcuODggODUuOTEwMUMxNDUuNjYgODMuOTQwMSAxNDQuNiA4MS42MzAxIDE0NC43MyA3OS4wNDAxQzE0NS4wMiA3My4yNDAxIDE1MS40MyA2OC4xMDAxIDE1Mi42OSA2Ny4xNDAxQzE1My40NSA2Ni4xMjAxIDE1Ni44MyA2MS45MjAxIDE2MS4zMiA2MS41NDAxQzE2My44NyA2MS4zMzAxIDE2Ni4yNiA2Mi4zNDAxIDE2OC40MiA2NC41NjAxQzE3Mi42MSA2OC44NzAxIDE2OS42NiA3Ni41MTAxIDE2NC41OSA4MS44MzAxQzE2MS4zIDg1LjI4MDEgMTU3IDg3Ljg3MDEgMTUzLjA5IDg3Ljg3MDFIMTUzLjA4Wk0xNTQuNjggNjkuNDUwMUMxNTIuODIgNzAuODAwMSAxNDcuOTYgNzUuMTgwMSAxNDcuNzcgNzkuMjAwMUMxNDcuNjkgODAuODQwMSAxNDguMzkgODIuMzAwMSAxNDkuOSA4My42NDAxQzE1My4xNiA4Ni41MzAxIDE1OC42NiA4My42NDAxIDE2Mi4zOSA3OS43NDAxQzE2Ni4zNiA3NS41ODAxIDE2OS4wNiA2OS41OTAxIDE2Ni4yNCA2Ni42OTAxQzE2NC43MyA2NS4xNDAxIDE2My4yMSA2NC40NTAxIDE2MS41OSA2NC41ODAxQzE1OC4wMSA2NC44NzAxIDE1NS4wNyA2OS4wNTAxIDE1NS4wNCA2OS4wOTAxQzE1NC45NCA2OS4yMzAxIDE1NC44MiA2OS4zNjAxIDE1NC42OCA2OS40NjAxVjY5LjQ1MDFaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik0xMTcuMjMgMTguMzk5OUM3My4wMiAxOC43Mjk5IDc5LjExIDU4LjkzOTkgNzkuMTEgNTguOTM5OUM4Ni41OCAxMTQuNzQgMTE3LjIzIDEwOS44MyAxMTcuMjMgMTA5LjgzQzExNy4yMyAxMDkuODMgMTQ3Ljg4IDExNC43NCAxNTUuMzUgNTguOTM5OUMxNTUuMzUgNTguOTM5OSAxNjEuNDQgMTguNzI5OSAxMTcuMjMgMTguMzk5OVoiIGZpbGw9IiNGMUZDRkQiLz4KPHBhdGggZD0iTTExOS4xNCAxMTEuNDZDMTE4LjIyIDExMS40NiAxMTcuNTYgMTExLjQgMTE3LjIzIDExMS4zNkMxMTUuNzEgMTExLjU0IDEwNy41NSAxMTIuMTQgOTguOCAxMDUuNjNDODcuNzcgOTcuNDI5OSA4MC42NCA4MS43Nzk5IDc3LjYxIDU5LjEzOTlDNzcuNSA1OC40NDk5IDc1LjA3IDQxLjQ1OTkgODUuNjMgMjkuMDk5OUM5Mi40NiAyMS4wOTk5IDEwMy4wOSAxNi45ODk5IDExNy4yMyAxNi44Nzk5SDExNy4yNUMxMzEuMzkgMTYuOTc5OSAxNDIuMDIgMjEuMDk5OSAxNDguODUgMjkuMDk5OUMxNTkuNCA0MS40NTk5IDE1Ni45NyA1OC40NDk5IDE1Ni44NiA1OS4xNjk5QzE1My44MyA4MS43ODk5IDE0Ni43IDk3LjQyOTkgMTM1LjY3IDEwNS42NEMxMjguODUgMTEwLjcxIDEyMi4zOSAxMTEuNDcgMTE5LjE1IDExMS40N0wxMTkuMTQgMTExLjQ2Wk0xMTcuMjMgMTA4LjMxQzExNy4zMSAxMDguMzEgMTE3LjM5IDEwOC4zMSAxMTcuNDcgMTA4LjMzQzExNy40OCAxMDguMzMgMTE5LjQ5IDEwOC42MyAxMjIuNTEgMTA4LjEzQzEyNS4yOCAxMDcuNjggMTI5LjUyIDEwNi40NCAxMzMuOTMgMTAzLjEzQzE0NC4wOSA5NS41MTk5IDE1MC45NyA4MC4xNjk5IDE1My44NCA1OC43Mzk5QzE1My44NyA1OC41NDk5IDE1Ni4xNiA0Mi4zMzk5IDE0Ni41MSAzMS4wNDk5QzE0MC4yOCAyMy43NTk5IDEzMC40MyAyMC4wMTk5IDExNy4yMyAxOS45MTk5QzEwNC4wMyAyMC4wMTk5IDk0LjE4IDIzLjc2OTkgODcuOTUgMzEuMDQ5OUM3OC4zIDQyLjMzOTkgODAuNTkgNTguNTQ5OSA4MC42MiA1OC43MDk5QzgzLjQ5IDgwLjE2OTkgOTAuMzggOTUuNTE5OSAxMDAuNTMgMTAzLjEzQzEwNC45NCAxMDYuNDQgMTA5LjE4IDEwNy42NyAxMTEuOTUgMTA4LjEzQzExNC45NyAxMDguNjIgMTE2Ljk3IDEwOC4zMyAxMTYuOTkgMTA4LjMzQzExNy4wNyAxMDguMzIgMTE3LjE1IDEwOC4zMSAxMTcuMjMgMTA4LjMxWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNMTE2Ljk1IDg2LjM1MDFDMTE5LjA1NyA4Ni4zNTAyIDEyMC44NTEgODcuOTYzMyAxMjEuNDg5IDkwLjIwMDdDMTIyLjc4MSA4OS43MjI5IDEyMy45OTEgODkuMDAzMyAxMjUuMTEgODguMDQwNUMxMjUuNzUgODcuNDkwNSAxMjYuNzEgODcuNTYwNyAxMjcuMjUgODguMjAwN0MxMjcuNzk5IDg4Ljg0MDYgMTI3LjczIDg5LjgwMDQgMTI3LjA5MSA5MC4zNDAzQzEyNS40MyA5MS43NjY4IDEyMy41ODUgOTIuNzcyOSAxMjEuNTk5IDkzLjM1M0MxMjEuMDg0IDk1LjgxOTYgMTE5LjE5NSA5Ny42NTA4IDExNi45NSA5Ny42NTA5QzExNC42NDUgOTcuNjUwOCAxMTIuNzEzIDk1LjcyMTEgMTEyLjI2MSA5My4xNTQ4QzEwOC44NDkgOTIuMTQyOSAxMDYuNDk0IDkwLjUyNTYgMTA2LjM4IDkwLjQzOTlDMTA1LjY5IDg5Ljk2IDEwNS41MiA4OS4wMTA2IDEwNiA4OC4zMjA4QzEwNi40OCA4Ny42MzA5IDEwNy40MyA4Ny40NjAxIDEwOC4xMSA4Ny45Mzk5QzEwOC4xNDcgODcuOTY0NiAxMDkuOTAyIDg5LjE1OCAxMTIuNDYzIDkwLjAyMkMxMTMuMTQ0IDg3Ljg3NzYgMTE0Ljg5OSA4Ni4zNTAyIDExNi45NSA4Ni4zNTAxWk0xMTUuNDcxIDY0LjE0MDFDMTE2LjI5IDYzLjk2MDUgMTE3LjEgNjQuNDgwNyAxMTcuMjggNjUuMjkwNUMxMTcuMzAyIDY1LjM3OTMgMTE3LjcyIDY3LjMyNjEgMTE3LjUxMSA2OS41MzA4QzExNy4xOSA3Mi43NTAzIDExNS43IDc0Ljk1MDIgMTEzLjE5IDc1Ljg5MDFDMTExLjkzMSA3Ni4zNiAxMTEuMzQgNzcuMiAxMTEuNSA3Ny43M0MxMTEuNzIgNzguNDggMTEzLjg1MSA3OS42NDk3IDExOSA3OC40OEMxMTkuODIgNzguMjkwMSAxMjAuNjMgNzguODEwNCAxMjAuODIgNzkuNjMwNEMxMjEuMDEgODAuNDUwMiAxMjAuNDkgODEuMjYwNyAxMTkuNjcgODEuNDUwN0MxMTcuOTIgODEuODUwNSAxMTYuMzkgODIuMDIgMTE1LjA5MSA4Mi4wMkgxMTUuMDhDMTExLjEyIDgyLjAxOTkgMTA5LjEyIDgwLjQxOTkgMTA4LjU4IDc4LjYwMDFDMTA3LjkyIDc2LjQwMDIgMTA5LjQxIDc0LjA2MDUgMTEyLjEyIDczLjA0MDVDMTE1LjUyOCA3MS43NjQ5IDExNC4zMzggNjYuMDQ5NCAxMTQuMzEgNjUuOTUwN0MxMTQuMTMgNjUuMTMwNyAxMTQuNjUxIDY0LjMyMDEgMTE1LjQ3MSA2NC4xNDAxWk02OS4zNjk5IDY4LjI3QzY5LjUzOTkgNjcuNDUwMSA3MC4zNCA2Ni45MDk3IDcxLjE2IDY3LjA3OTZDNzEuNDQgNjcuMTM5NiA3OC4xMTk3IDY4LjU1IDgwLjI0OTggNzQuMTQ5OUM4MC41NDk4IDc0LjkyOTkgODAuMTQ5OSA3NS44MDk5IDc5LjM2OTkgNzYuMTA5OUM3OS4xODk5IDc2LjE3OTkgNzkuMDA5OSA3Ni4yMTA0IDc4LjgyOTkgNzYuMjEwNEM3OC4yMTk5IDc2LjIxMDQgNzcuNjQgNzUuODM5OSA3Ny40MSA3NS4yM0M3NS44NzI5IDcxLjE4NzkgNzAuNjMwNSA3MC4wNzQzIDcwLjU2MDQgNzAuMDYwMUM2OS43NDA0IDY5Ljg5MDEgNjkuMjA5OSA2OS4wOSA2OS4zNjk5IDY4LjI3Wk0xNjMuMyA2Ny4wNzk2QzE2NC4xMiA2Ni45MDk2IDE2NC45MiA2Ny40NSAxNjUuMDkgNjguMjdDMTY1LjI2IDY5LjA5IDE2NC43MyA2OS44OTAxIDE2My45MSA3MC4wNjAxQzE2My44MzkgNzAuMDcwMiAxNTguNTggNzEuMjIwMyAxNTcuMDYgNzUuMjNDMTU2LjgzIDc1LjgzOTggMTU2LjI1IDc2LjIxMDMgMTU1LjY0IDc2LjIxMDRIMTU1LjYzQzE1NS40NSA3Ni4yMTA0IDE1NS4yNyA3Ni4xNzk4IDE1NS4wOSA3Ni4xMDk5QzE1NC4zMSA3NS44MDk3IDE1My45MSA3NC45Mjk4IDE1NC4yMSA3NC4xNDk5QzE1Ni4zMzkgNjguNTUxNiAxNjMuMDA2IDY3LjE0MDQgMTYzLjMgNjcuMDc5NlpNOTguNjY5NyA2My4wMzA4QzEwMC45OCA2My4wMzA5IDEwMi44NSA2NC45MDA1IDEwMi44NSA2Ny4yMTA0QzEwMi44NSA2OS41MjAyIDEwMC45OCA3MS4zOSA5OC42Njk3IDcxLjM5MDFDOTYuMzYwMSA3MS4zODk5IDk0LjQ5MDMgNjkuNTIwMSA5NC40OTAxIDY3LjIxMDRDOTQuNDkwMSA2NC45MDA2IDk2LjM1OTkgNjMuMDMxIDk4LjY2OTcgNjMuMDMwOFpNMTM1LjI1IDYzLjAzMDhDMTM3LjU1OCA2My4wMzA5IDEzOS40MyA2NC45MDIgMTM5LjQzIDY3LjIxMDRDMTM5LjQzIDY5LjUxODcgMTM3LjU1OCA3MS4zOSAxMzUuMjUgNzEuMzkwMUMxMzIuOTQyIDcxLjM4OTkgMTMxLjA3IDY5LjUxODcgMTMxLjA3IDY3LjIxMDRDMTMxLjA3IDY0LjkwMiAxMzIuOTQxIDYzLjAzMSAxMzUuMjUgNjMuMDMwOFpNOTIuNTIwMyA1OS4yODA4SDkyLjUxMDZDOTIuNTExOCA1OS4yODA3IDkyLjUxMzIgNTkuMjc5OCA5Mi41MTQ1IDU5LjI3OThDOTIuNTE2MyA1OS4yNzk5IDkyLjUxODUgNTkuMjgwOCA5Mi41MjAzIDU5LjI4MDhaTTEyOS4wOTEgNTIuNjgwMkMxMzEuOTEgNTEuMjIwNSAxMzUuMTYgNTEuNTAwOSAxMzguNSA1My40OTA3QzE0MC44NTkgNTQuOTAwNSAxNDIuNDUgNTYuNjg5OSAxNDIuNTIgNTYuNzYwM0MxNDMuMDggNTcuMzkwMyAxNDMuMDIgNTguMzUxIDE0Mi4zOSA1OC45MDA5QzE0Mi4xMDEgNTkuMTUwNyAxNDEuNzQgNTkuMjgwNiAxNDEuMzkgNTkuMjgwOEMxNDAuOTcxIDU5LjI4MDggMTQwLjU1IDU5LjEwOTggMTQwLjI1IDU4Ljc3QzE0MC4xNjQgNTguNjcyNiAxMzUuMDQzIDUzLjAyNDEgMTMwLjQ5IDU1LjM4MDRDMTI5Ljc0IDU1Ljc3MDMgMTI4LjgzIDU1LjQ2OTcgMTI4LjQ0IDU0LjczQzEyOC4wNTEgNTMuOTggMTI4LjM1MSA1My4wNzAxIDEyOS4wOTEgNTIuNjgwMlpNOTUuNDAwMiA1My40OTA3Qzk4LjczMDIgNTEuNTAwNyAxMDEuOTkgNTEuMjMwMiAxMDQuODEgNTIuNjgwMkMxMDUuNTYgNTMuMDcwMyAxMDUuODUgNTMuOTgwMSAxMDUuNDYgNTQuNzNDMTA1LjA3IDU1LjQ2OTcgMTA0LjE2IDU1Ljc3MDEgMTAzLjQxIDU1LjM4MDRDOTguODQ0NSA1My4wMjI5IDkzLjcyIDU4LjY5OTEgOTMuNjUwMiA1OC43N0M5My4zNTEzIDU5LjEwODcgOTIuOTMyOSA1OS4yNzg2IDkyLjUxNDUgNTkuMjc5OEM5Mi4xNTY1IDU5LjI3ODQgOTEuNzk5IDU5LjE0ODQgOTEuNTEwNiA1OC44OTk5QzkwLjg4MDcgNTguMzQgOTAuODIgNTcuMzkwMyA5MS4zNzk3IDU2Ljc2MDNDOTEuNDQ5NyA1Ni42ODAzIDkzLjA0MDMgNTQuOTAwNyA5NS40MDAyIDUzLjQ5MDdaIiBmaWxsPSIjNUFCMEMwIi8+CjxwYXRoIGQ9Ik04MC41NCA2NS42MjAxQzgwLjU0IDY1LjYyMDEgODEuNjkgNDkuMTkwMSA5NC40OSAzMi4yOTAxTDk2LjYxIDQ2Ljc2MDFIMTEyLjE2TDExOS4zMiAzMS4zMDAxTDEyMS43NCA1My4yNzAxSDEyNC41MUwxMzEuNzEgMzUuNjIwMUwxMzIuNjMgNDguNDUwMUgxMzkuNDJMMTQyLjg1IDM2LjE0MDFDMTQyLjg1IDM2LjE0MDEgMTUzLjI1IDQ4LjU5MDEgMTU0LjE0IDY2LjQwMDFDMTU0LjE0IDY2LjQwMDEgMTYzLjI2IDYwLjM3MDEgMTU3LjU3IDM2LjI3MDFDMTUxLjg4IDEyLjE3MDEgMTIyLjYxIDEyLjk1MDEgMTA3LjI1IDEzLjc0MDFDOTEuODkgMTQuNTMwMSA3NC4yOSAyOC45MzAxIDc0Ljg0IDQ3LjUzMDFDNzUuMzkgNjYuMTMwMSA4MC41NCA2NS42MDAxIDgwLjU0IDY1LjYwMDFWNjUuNjIwMVoiIGZpbGw9IiM1QUIwQzAiLz4KPHBhdGggZD0iTTE0Mi44NSAxMDQuMDJDMTQyLjg1IDEwNC4wMiAxODUuNjggMTMxLjMxIDE3NS4wNyAxNTkuODFDMTY1LjI5IDE4Ni4wOSAxNjUuODQgMjAyLjY1IDE3MS44NiAyMTYuMDRDMTcyLjg0IDIxOC4yMiAxNzAuNDggMjIwLjQxIDE2OC4zNyAyMTkuMjhDMTU2LjQzIDIxMi44OSAxMzQuMTIgMTk4LjQ3IDEzOS40MiAxODIuMDZDMTUyLjI4IDE0Mi4yNyAxMjIuOCAxMzcuNCAxMzUuOTcgMTA0Ljk4TDE0Mi44NSAxMDQuMDFWMTA0LjAyWiIgZmlsbD0iIzVBQjBDMCIvPgo8cGF0aCBkPSJNMTQ4LjI2IDEwNy4xNUMxNDguMjYgMTA5LjI1IDE0NS4xOCAxMTAuOTUgMTQxLjM5IDExMC45NUMxMzcuNiAxMTAuOTUgMTM0LjUyIDEwOS4yNSAxMzQuNTIgMTA3LjE1QzEzNC41MiAxMDUuMDUgMTM3LjYgMTAzLjM1IDE0MS4zOSAxMDMuMzVDMTQ1LjE4IDEwMy4zNSAxNDguMjYgMTA1LjA1IDE0OC4yNiAxMDcuMTVaIiBmaWxsPSIjRUNGNkY4Ii8+CjxwYXRoIGQ9Ik0xNDEuMzkgMTEyLjQ3QzEzNi42MSAxMTIuNDcgMTMzIDExMC4xOCAxMzMgMTA3LjE1QzEzMyAxMDQuMTIgMTM2LjYxIDEwMS44MyAxNDEuMzkgMTAxLjgzQzE0Ni4xNyAxMDEuODMgMTQ5Ljc4IDEwNC4xMiAxNDkuNzggMTA3LjE1QzE0OS43OCAxMTAuMTggMTQ2LjE3IDExMi40NyAxNDEuMzkgMTEyLjQ3Wk0xNDEuMzkgMTA0Ljg3QzEzOC4xNyAxMDQuODcgMTM2LjA0IDEwNi4yNCAxMzYuMDQgMTA3LjE1QzEzNi4wNCAxMDguMDYgMTM4LjE3IDEwOS40MyAxNDEuMzkgMTA5LjQzQzE0NC42MSAxMDkuNDMgMTQ2Ljc0IDEwOC4wNiAxNDYuNzQgMTA3LjE1QzE0Ni43NCAxMDYuMjQgMTQ0LjYxIDEwNC44NyAxNDEuMzkgMTA0Ljg3WiIgZmlsbD0iIzVBQjBDMCIvPgo8L2c+CjxkZWZzPgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzEyOF8xMDUzIj4KPHJlY3Qgd2lkdGg9IjIzNi40NSIgaGVpZ2h0PSIzMjAuNTQiIGZpbGw9IndoaXRlIi8+CjwvY2xpcFBhdGg+CjwvZGVmcz4KPC9zdmc+Cg==",
@@ -679,960 +239,189 @@ window.__PERSONA_ICONS = {
 function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS[name]) || ("icons/" + name); }
 </script>
 <script>
-/* ═══════════════════════════════════════════════════════════════════════════
-   FORGE RUNTIME SHIM  +  BAKED PERSONA DATA  +  PORTED GUIDE/EDIT MODAL
-   Wrapped in an IIFE so nothing here collides with the panel script's globals.
-   ═══════════════════════════════════════════════════════════════════════════ */
-(function () {
-  'use strict';
-
-  // ── Persona library (verbatim from src/index.js DEFAULT_LIBRARY) ──────────
-  var DEFAULT_LIBRARY = [
+  var PERSONAS = [
     { id: 'exp', name: 'Experienced Employee', segment: 'Leave Takers', icon: 'experienced-employee.svg',
       desc: 'A repeat leave-taker who knows the process, watches pay accuracy closely, and plans ahead for handoffs and returning to work.',
-      keywords: ['experienced','repeat','pay accuracy','returning','returning employee','employee','leave request','leave case','their leave','time off','intermittent','return to work','rtw','offboard','performance'],
       jtbd: ['Trust my leave balance is right before I act on it','Stay confident my pay stays accurate throughout my leave — no surprises','Complete any leave task quickly without re-entering what I’ve already provided','Know what to expect at each step, from request through return to work'],
       insights: [
-        { type: 'Research', title: 'Pay continuity tops the list for repeat leave-takers', snippet: 'Employee leave-experience research consistently finds that returning leave-takers rank pay accuracy and continuity above the approval process itself as their top concern.', source: 'SHRM', url: 'https://www.shrm.org' },
-        { type: 'Trend', title: 'Self-service pay estimates are becoming standard', snippet: 'More employers now expose real-time leave balance and projected pay during leave, cutting down on follow-up calls to HR.', source: 'WorldatWork', url: 'https://worldatwork.org' },
-        { type: 'Workplace news', title: 'Repeat filers still re-enter the same information', snippet: 'Even experienced leave-takers commonly report having to re-enter details they’ve already provided in a prior leave, a recurring theme in workplace leave surveys.', source: 'DMEC', url: 'https://dmec.org' }
+        { type: 'Research', title: 'Pay continuity tops the list for repeat leave-takers', snippet: 'Employee leave-experience research consistently finds that returning leave-takers rank pay accuracy and continuity above the approval process itself.', source: 'SHRM', url: 'https://www.shrm.org' },
+        { type: 'Trend', title: 'Self-service pay estimates are becoming standard', snippet: 'More employers now expose real-time leave balance and projected pay during leave, cutting follow-up calls to HR.', source: 'WorldatWork', url: 'https://worldatwork.org' },
+        { type: 'Workplace news', title: 'Repeat filers still re-enter the same information', snippet: 'Even experienced leave-takers commonly report re-entering details they’ve already provided in a prior leave.', source: 'DMEC', url: 'https://dmec.org' }
       ] },
     { id: 'first', name: 'First-Time Employee', segment: 'Leave Takers', icon: 'first-time-employee.svg',
       desc: 'Has never taken leave before and has no idea where to start — what to do, what paperwork is needed, or what they’re entitled to.',
-      keywords: ['employee','first leave','first-time','never taken','new employee','drop-off','intake','understand what they need','where to start','onboard','new hire','leave request','time off','checklist','pto','rights','entitled','medical documentation'],
       jtbd: ['Understand what applies to my situation and what to do next','Always know what’s expected of me and by when','Know exactly what I need to provide, and confirm I’ve done it right','Make the right choice among my options without guessing'],
       insights: [
-        { type: 'Research', title: 'First-time filers stall without clear guidance', snippet: 'Research on leave intake consistently shows first-time filers delay or abandon requests when they aren’t sure which leave type applies to their situation.', source: 'U.S. Department of Labor', url: 'https://www.dol.gov/agencies/whd/fmla' },
-        { type: 'Trend', title: 'Guided intake questionnaires are on the rise', snippet: 'More leave management platforms now walk employees through a short questionnaire to identify the right leave type before they file.', source: 'DMEC', url: 'https://dmec.org' },
-        { type: 'Workplace news', title: 'FMLA eligibility awareness remains uneven', snippet: 'Workforce surveys continue to find that many employees are unsure whether they qualify for job-protected leave until they need it.', source: 'U.S. Department of Labor', url: 'https://www.dol.gov/agencies/whd/fmla' }
-      ] },
-    { id: 'hradmin', name: 'HR Administrator', segment: 'Leave Managers', icon: 'hr-administrator.svg',
-      desc: 'Configures and owns AbsenceSoft on behalf of the organization.',
-      keywords: ['configure','admin','settings','permissions','sso','org-level','organization','policy setup','system config'],
-      jtbd: ['Set the system up to match how our organization actually runs leave','Control who can do what, confidently','Keep us compliant as the rules change'],
-      insights: [
-        { type: 'Research', title: 'Policy complexity scales faster than headcount', snippet: 'Research on multi-state employers shows leave policy administration grows more complex faster than the workforce itself, as state and local leave laws stack up.', source: 'SHRM', url: 'https://www.shrm.org' },
-        { type: 'Trend', title: 'Spreadsheets are being replaced by centralized config', snippet: 'Organizations are increasingly moving leave policy management out of spreadsheets and into dedicated systems as law changes accelerate.', source: 'DMEC', url: 'https://dmec.org' },
-        { type: 'Workplace news', title: 'State paid-leave programs keep expanding', snippet: 'More states have introduced or expanded paid family and medical leave programs in recent years, each adding its own compliance requirements for employers.', source: 'SHRM', url: 'https://www.shrm.org' }
-      ] },
-    { id: 'casemgr', name: 'Leave Case Manager', segment: 'Leave Managers', icon: 'leave-case-manager.svg',
-      desc: 'Adjudicates leave cases end-to-end — checking certifications, communicating with employees, and juggling SLA deadlines across a full caseload.',
-      keywords: ['case','certification','adjudicat','determination','eligibility','tracking','case owner','case management','documentation review','return to work','rtw','accommodation','sla','compliance'],
-      jtbd: ['Stay on top of every deadline across my caseload','See a case’s full history without losing the compliance thread','Keep everyone informed and on time, without missing an SLA','Move a case forward end to end — leave, accommodation, and return'],
-      insights: [
-        { type: 'Research', title: 'Certification follow-up is the biggest time sink', snippet: 'Absence management operations research repeatedly identifies medical certification tracking and follow-up as case managers’ most time-consuming task.', source: 'DMEC', url: 'https://dmec.org' },
-        { type: 'Trend', title: 'Automated certification reminders are becoming standard', snippet: 'Leave administration platforms increasingly automate certification deadline reminders to reduce manual case tracking.', source: 'DMEC', url: 'https://dmec.org' },
-        { type: 'Workplace news', title: 'Case backlogs remain a persistent benchmark theme', snippet: 'Industry benchmarking surveys of leave and disability programs continue to cite open-case backlogs as an ongoing operational challenge.', source: 'DMEC', url: 'https://dmec.org' }
+        { type: 'Research', title: 'First-time filers stall without clear guidance', snippet: 'Research on leave intake shows first-time filers delay or abandon requests when unsure which leave type applies.', source: 'U.S. Department of Labor', url: 'https://www.dol.gov/agencies/whd/fmla' },
+        { type: 'Trend', title: 'Guided intake questionnaires are on the rise', snippet: 'More platforms now walk employees through a short questionnaire to identify the right leave type before they file.', source: 'DMEC', url: 'https://dmec.org' },
+        { type: 'Workplace news', title: 'FMLA eligibility awareness remains uneven', snippet: 'Workforce surveys find many employees are unsure whether they qualify for job-protected leave until they need it.', source: 'U.S. Department of Labor', url: 'https://www.dol.gov/agencies/whd/fmla' }
       ] },
     { id: 'peoplemgr', name: 'People Manager', segment: 'Leave Takers', icon: 'people-manager.svg',
       desc: 'Manages a team through a leave — submitting requests on their behalf, covering the gap, and planning the return to work — often without full visibility into the process.',
-      keywords: ['manager','supervisor','people manager','team member','approve leave','approval','direct report','their team','notify manager','return to work','rtw','coverage','escalation','burnout','team status'],
       jtbd: ['Know the moment something needs my attention for my team','See my team’s leave status at a glance, wherever I’m working','Know what’s mine to handle and when to bring in HR','Plan smooth coverage and a smooth return for my team'],
       insights: [
-        { type: 'Research', title: 'Coverage planning is managers’ top leave-related challenge', snippet: 'Surveys of people managers consistently rank arranging team coverage as their biggest challenge when a direct report takes leave.', source: 'SHRM', url: 'https://www.shrm.org' },
-        { type: 'Trend', title: 'Manager-facing leave tools are a growing product category', snippet: 'More HR platforms are building manager-specific views that show team leave status and coverage gaps without exposing medical details.', source: 'SHRM', url: 'https://www.shrm.org' },
-        { type: 'Workplace news', title: 'Manager training increasingly covers what not to ask', snippet: 'Employers are putting more effort into training managers on routing medical details to HR and keeping leave conversations focused on logistics.', source: 'U.S. Equal Employment Opportunity Commission', url: 'https://www.eeoc.gov' }
+        { type: 'Research', title: 'Coverage planning is managers’ top leave-related challenge', snippet: 'Surveys of people managers rank arranging team coverage as their biggest challenge when a report takes leave.', source: 'SHRM', url: 'https://www.shrm.org' },
+        { type: 'Trend', title: 'Manager-facing leave tools are a growing category', snippet: 'More HR platforms build manager views showing team leave status and coverage gaps without exposing medical details.', source: 'SHRM', url: 'https://www.shrm.org' },
+        { type: 'Workplace news', title: 'Manager training increasingly covers what not to ask', snippet: 'Employers train managers to route medical details to HR and keep leave conversations focused on logistics.', source: 'U.S. Equal Employment Opportunity Commission', url: 'https://www.eeoc.gov' }
+      ] },
+    { id: 'hradmin', name: 'HR Administrator', segment: 'Leave Managers', icon: 'hr-administrator.svg',
+      desc: 'Configures and owns AbsenceSoft on behalf of the organization — policies, permissions, and staying compliant as the rules change.',
+      jtbd: ['Set the system up to match how our organization actually runs leave','Control who can do what, confidently','Keep us compliant as the rules change'],
+      insights: [
+        { type: 'Research', title: 'Policy complexity scales faster than headcount', snippet: 'Research on multi-state employers shows leave policy administration grows more complex faster than the workforce itself.', source: 'SHRM', url: 'https://www.shrm.org' },
+        { type: 'Trend', title: 'Spreadsheets are being replaced by centralized config', snippet: 'Organizations are moving leave policy management out of spreadsheets into dedicated systems as law changes accelerate.', source: 'DMEC', url: 'https://dmec.org' },
+        { type: 'Workplace news', title: 'State paid-leave programs keep expanding', snippet: 'More states have introduced or expanded paid family and medical leave programs, each adding compliance requirements.', source: 'SHRM', url: 'https://www.shrm.org' }
+      ] },
+    { id: 'casemgr', name: 'Leave Case Manager', segment: 'Leave Managers', icon: 'leave-case-manager.svg',
+      desc: 'Adjudicates leave cases end-to-end — checking certifications, communicating with employees, and juggling SLA deadlines across a full caseload.',
+      jtbd: ['Stay on top of every deadline across my caseload','See a case’s full history without losing the compliance thread','Keep everyone informed and on time, without missing an SLA','Move a case forward end to end — leave, accommodation, and return'],
+      insights: [
+        { type: 'Research', title: 'Certification follow-up is the biggest time sink', snippet: 'Absence management research repeatedly identifies medical certification tracking as case managers’ most time-consuming task.', source: 'DMEC', url: 'https://dmec.org' },
+        { type: 'Trend', title: 'Automated certification reminders are becoming standard', snippet: 'Leave platforms increasingly automate certification deadline reminders to reduce manual case tracking.', source: 'DMEC', url: 'https://dmec.org' },
+        { type: 'Workplace news', title: 'Case backlogs remain a persistent benchmark theme', snippet: 'Benchmarking surveys of leave and disability programs continue to cite open-case backlogs as an operational challenge.', source: 'DMEC', url: 'https://dmec.org' }
       ] },
     { id: 'support', name: 'Customer Support Analyst', segment: 'Support', icon: 'customer-support.svg',
       desc: 'Front-line analyst triaging 20-25 tickets at a time — reproducing customer-reported bugs and fielding product questions without much reliance on engineering.',
-      keywords: ['support ticket','customer reported','reported bug','repro','reproduce','salesforce','sso','logs','log','documentation','impersonate','api','sla'],
       jtbd: ['Get to the bottom of a reported issue without waiting on engineering','Understand what the system did without digging through raw logs','Find a trustworthy answer fast, not tribal knowledge'],
       insights: [
-        { type: 'Research', title: 'Tier-1 support spends outsized time on reproduction, not resolution', snippet: 'Support operations research consistently finds front-line analysts spend more time trying to reproduce a reported issue than actually resolving it, especially when logging is sparse.', source: 'HDI', url: 'https://www.thinkhdi.com' },
-        { type: 'Trend', title: 'Self-service diagnostic tooling is replacing developer hand-offs', snippet: 'More SaaS platforms are giving support teams direct access to session replay and structured logs so common issues can be triaged without escalating to engineering.', source: 'Zendesk', url: 'https://www.zendesk.com' },
-        { type: 'Workplace news', title: 'Documentation debt is a recurring theme in support benchmarking', snippet: 'Fast-growing SaaS orgs increasingly report that support documentation lags product changes, pushing analysts to rely on tribal knowledge instead.', source: 'Zendesk', url: 'https://www.zendesk.com' }
+        { type: 'Research', title: 'Tier-1 support spends outsized time on reproduction', snippet: 'Support research finds front-line analysts spend more time reproducing a reported issue than resolving it when logging is sparse.', source: 'HDI', url: 'https://www.thinkhdi.com' },
+        { type: 'Trend', title: 'Self-service diagnostics replace developer hand-offs', snippet: 'More SaaS platforms give support direct access to session replay and structured logs so issues triage without engineering.', source: 'Zendesk', url: 'https://www.zendesk.com' },
+        { type: 'Workplace news', title: 'Documentation debt is a recurring support theme', snippet: 'Fast-growing SaaS orgs report support documentation lags product changes, pushing analysts to rely on tribal knowledge.', source: 'Zendesk', url: 'https://www.zendesk.com' }
       ] },
     { id: 'proserv', name: 'Professional Services Consultant', segment: 'Support', icon: 'professional-services.svg',
       desc: 'Gets customers live and keeps them there — configuring AbsenceSoft to their policies, wiring up integrations and data migration, then training their team to run it themselves.',
-      keywords: ['implementation','implement','professional services','onboarding','onboard customer','configure','configuration','deploy','deployment','go-live','go live','cutover','uat','integration','integrate','sftp','file feed','hris','payroll feed','carrier','data migration','migration','import','bulk load','custom','customization','training','enablement','best practice','statement of work','sow','customer environment'],
       jtbd: ['Get the customer live in their environment, smoothly','Connect the product to the systems the customer already runs on','Adapt the product when the standard fit isn’t enough','Move the customer’s history over safely','Set the customer’s team up to run it themselves'],
       insights: [
-        { type: 'Research', title: 'Time-to-value is the metric services orgs are measured on', snippet: 'Technology services research consistently frames shortening time-to-first-value during implementation as the primary driver of downstream adoption and renewal.', source: 'TSIA', url: 'https://www.tsia.com/blog/what-is-professional-services-a-quick-guide' },
-        { type: 'Trend', title: 'Implementations are shifting from custom code to repeatable configuration', snippet: 'Software services forecasts point to packaged, configuration-led delivery replacing bespoke build work, with custom development reserved for genuinely unique client needs.', source: 'Deloitte', url: 'https://www.deloitte.com/us/en/services/consulting/articles/future-of-software-professional-services.html' },
-        { type: 'Workplace news', title: 'Legacy data and integrations remain the usual schedule risk', snippet: 'Implementation practitioners continue to cite migrating data from older systems and connecting to existing databases as the steps most likely to slip a go-live date.', source: 'Splunk', url: 'https://www.splunk.com/en_us/blog/learn/managed-vs-professional-services.html' }
+        { type: 'Research', title: 'Time-to-value is the metric services orgs are measured on', snippet: 'Services research frames shortening time-to-first-value during implementation as the primary driver of adoption and renewal.', source: 'TSIA', url: 'https://www.tsia.com/blog/what-is-professional-services-a-quick-guide' },
+        { type: 'Trend', title: 'Implementations shift from custom code to configuration', snippet: 'Software services forecasts point to packaged, configuration-led delivery replacing bespoke build work.', source: 'Deloitte', url: 'https://www.deloitte.com/us/en/services/consulting/articles/future-of-software-professional-services.html' },
+        { type: 'Workplace news', title: 'Legacy data and integrations remain the usual risk', snippet: 'Practitioners cite migrating data from older systems and connecting existing databases as the steps most likely to slip a go-live.', source: 'Splunk', url: 'https://www.splunk.com/en_us/blog/learn/managed-vs-professional-services.html' }
       ] }
   ];
 
-  // Demo ticket text — drives the "Suggested" matches (keyword scan, verbatim
-  // from suggestPersonas in src/index.js).
-  var TICKET_TEXT = 'Intermittent leave: employees have to re-enter the same information every time they file, and they worry about pay accuracy when they return to work. Managers need visibility into coverage while a direct report is out.';
-
-  function suggestPersonas(text, personas) {
-    var t = (text || '').toLowerCase();
-    var out = {};
-    for (var i = 0; i < personas.length; i++) {
-      var p = personas[i], kws = Array.isArray(p.keywords) ? p.keywords : [];
-      for (var j = 0; j < kws.length; j++) {
-        var k = String(kws[j]).trim().toLowerCase();
-        if (k && t.indexOf(k) !== -1) { out[p.id] = kws[j]; break; }
-      }
-    }
-    return out;
-  }
-
-  // ── Seeded demo state + localStorage persistence ──────────────────────────
-  var LS_KEY = 'personaWidgetDemo:v3';
-  function seedState() {
-    return {
-      ids: ['exp', 'casemgr', 'peoplemgr'],
-      jtbd: {
-        exp: { checked: [
-          'Trust my leave balance is right before I act on it',
-          'Stay confident my pay stays accurate throughout my leave — no surprises',
-          'Complete any leave task quickly without re-entering what I’ve already provided'
-        ], custom: [] },
-        casemgr: { checked: [
-          'Stay on top of every deadline across my caseload',
-          'Move a case forward end to end — leave, accommodation, and return'
-        ], custom: [] },
-        peoplemgr: { checked: [
-          'Know the moment something needs my attention for my team',
-          'Plan smooth coverage and a smooth return for my team'
-        ], custom: [] }
-      }
-    };
-  }
-  function loadState() {
-    try { var raw = localStorage.getItem(LS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
-    return null;
-  }
-  function saveState(s) { try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) {} }
-
-  // Start blank (first-run setup wizard) on a fresh visit; the sample state is
-  // still reachable via the "Reset to sample" demo button.
-  var state = loadState() || { ids: [], jtbd: {} };
-
-  // ── window.forge shim ─────────────────────────────────────────────────────
-  function invoke(name, payload) {
-    payload = payload || {};
-    if (name === 'getPanelInit') {
-      return Promise.resolve({
-        personas: DEFAULT_LIBRARY,
-        ids: state.ids.slice(),
-        own: state.ids.slice(),
-        inherited: [],
-        suppressed: [],
-        parentKey: null,
-        jtbd: JSON.parse(JSON.stringify(state.jtbd || {})),
-        ticketText: TICKET_TEXT,
-        suggestions: suggestPersonas(TICKET_TEXT, DEFAULT_LIBRARY)
-      });
-    }
-    if (name === 'getSuggestions') {
-      return Promise.resolve({ suggestions: suggestPersonas(payload.ticketText, DEFAULT_LIBRARY) });
-    }
-    if (name === 'setIssuePersonas') {
-      if (Array.isArray(payload.ids)) state.ids = payload.ids.slice();
-      // Only replace jtbd when the caller actually passed it (guide/edit save
-      // omits it, and must not wipe the wizard-curated jobs to be done).
-      if (payload.jtbd && typeof payload.jtbd === 'object') state.jtbd = JSON.parse(JSON.stringify(payload.jtbd));
-      saveState(state);
-      return Promise.resolve({ ok: true });
-    }
-    return Promise.resolve({});
-  }
-
-  // ── Ported guide/edit modal ───────────────────────────────────────────────
   var SEGMENT_LABELS = { 'Leave Takers': 'Submits Requests', 'Leave Managers': 'Manages Leave', 'Support': 'Provides Support' };
   var SEGMENT_ORDER = ['Leave Takers', 'Leave Managers', 'Support'];
-  function segLabel(seg) { return SEGMENT_LABELS[seg] || seg; }
-  function groupBySegment(list) {
-    return SEGMENT_ORDER
-      .map(function (seg) { return { segment: seg, items: list.filter(function (p) { return p.segment === seg; }) }; })
-      .filter(function (g) { return g.items.length > 0; });
+  function segClass(seg) { return String(seg || '').toLowerCase().replace(/\s+/g, '-'); }
+  function byId(id) { return PERSONAS.find(function (p) { return p.id === id; }); }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // ── Selection state (localStorage) ────────────────────────────────────────
+  var LS_KEY = 'personaResource:v1';
+  function loadSel() {
+    try { var raw = localStorage.getItem(LS_KEY); if (raw) { var a = JSON.parse(raw); if (Array.isArray(a)) return a; } } catch (e) {}
+    return ['exp', 'casemgr']; // sensible default so the page shows content at rest
+  }
+  var selected = new Set(loadSel().filter(byId));
+  function saveSel() { try { localStorage.setItem(LS_KEY, JSON.stringify(Array.from(selected))); } catch (e) {} }
+
+  // ── Render: picker ────────────────────────────────────────────────────────
+  function renderPicker() {
+    var groups = SEGMENT_ORDER
+      .map(function (seg) { return { seg: seg, items: PERSONAS.filter(function (p) { return p.segment === seg; }) }; })
+      .filter(function (g) { return g.items.length; });
+
+    document.getElementById('picker').innerHTML = groups.map(function (g) {
+      var cls = segClass(g.seg);
+      var cards = g.items.map(function (p) {
+        var on = selected.has(p.id);
+        return '' +
+          '<div class="pick-card ' + cls + (on ? ' selected' : '') + '" role="button" tabindex="0" aria-pressed="' + on + '" data-id="' + p.id + '">' +
+            '<div class="pick-check"><span class="material-symbols-outlined">check</span></div>' +
+            '<div class="pick-art"><img src="' + iconSrc(p.icon) + '" alt="' + esc(p.name) + '"></div>' +
+            '<div class="pick-name">' + esc(p.name) + '</div>' +
+          '</div>';
+      }).join('');
+      return '' +
+        '<div class="seg-group">' +
+          '<p class="seg-heading"><span class="seg-dot ' + cls + '"></span>' + esc(SEGMENT_LABELS[g.seg] || g.seg) + '</p>' +
+          '<div class="pick-grid">' + cards + '</div>' +
+        '</div>';
+    }).join('');
+
+    var n = selected.size;
+    document.getElementById('count-pill').textContent = n + ' selected';
+    document.getElementById('btn-all').disabled = n === PERSONAS.length;
+    document.getElementById('btn-clear').disabled = n === 0;
   }
 
-  var personaModal = {
-    overlay: null, onClose: null, mode: 'edit',
-    draft: null, suggestions: {}, expanded: null,
-
-    open: function (opts) {
-      this.overlay = document.getElementById('pw-modal');
-      this.onClose = opts.onClose || function () {};
-      var ctx = opts.context || {};
-      this.mode = ctx.mode || 'edit';
-
-      var init = invoke('getPanelInit', {});
-      var self = this;
-      init.then(function (data) {
-        var committed = Array.isArray(ctx.ids) ? ctx.ids : data.ids;
-        self.draft = new Set(committed);
-        self.suggestions = data.suggestions || {};
-        Object.keys(self.suggestions).forEach(function (id) { self.draft.add(id); });
-        self.expanded = new Set();
-
-        var isGuide = self.mode === 'guide';
-        if (isGuide) DEFAULT_LIBRARY.forEach(function (p) { self.expanded.add(p.id); });
-        if (ctx.expandId) self.expanded.add(ctx.expandId);
-
-        document.getElementById('modal-title-text').textContent = isGuide ? 'Product Personas' : 'Choose the users this affects';
-        document.getElementById('btn-cancel').style.display = isGuide ? 'none' : '';
-        document.getElementById('btn-save').style.display = isGuide ? 'none' : '';
-        document.getElementById('btn-done').style.display = isGuide ? '' : 'none';
-        document.getElementById('modal-close-x').dataset.maction = isGuide ? 'done' : 'cancel';
-
-        self.overlay.hidden = false;
-        self.render();
-
-        if (ctx.expandId) {
-          var tile = self.overlay.querySelector('.tile[data-persona-id="' + ctx.expandId + '"]');
-          if (tile) tile.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      });
-    },
-
-    toggle: function (id) { if (this.draft.has(id)) this.draft.delete(id); else this.draft.add(id); this.render(); },
-    toggleExpand: function (id) { if (this.expanded.has(id)) this.expanded.delete(id); else this.expanded.add(id); this.render(); },
-
-    renderTile: function (p) {
-      var checked = this.draft.has(p.id);
-      var suggested = !!this.suggestions[p.id];
-      var isOpen = this.expanded.has(p.id);
-      var seg = String(p.segment || '').toLowerCase().replace(/\s+/g, '-');
-      var jtbd = Array.isArray(p.jtbd) ? p.jtbd : [];
-      var sparkle = '<svg class="sparkle" viewBox="0 0 24 24" width="13" height="13"><path class="star-big" d="M13 0 C13 6 15 8 21 8 C15 8 13 10 13 16 C13 10 11 8 5 8 C11 8 13 6 13 0 Z" fill="currentColor"/><path class="star-small" d="M6.5 10 C6.5 12.5 7.3 13.3 9.8 13.3 C7.3 13.3 6.5 14.1 6.5 16.6 C6.5 14.1 5.7 13.3 3.2 13.3 C5.7 13.3 6.5 12.5 6.5 10 Z" fill="currentColor"/></svg>';
+  // ── Render: detail ────────────────────────────────────────────────────────
+  function detailCard(p) {
+    var cls = segClass(p.segment);
+    var jtbd = (p.jtbd || []).map(function (j) {
+      return '<li><span class="material-symbols-outlined jtbd-check">check_circle</span>' + esc(j) + '</li>';
+    }).join('');
+    var insights = (p.insights || []).map(function (ins) {
       return '' +
-        '<div class="tile ' + seg + ' ' + (checked ? 'checked' : '') + ' ' + (suggested ? 'suggested' : '') + ' ' + (isOpen ? 'expanded' : '') + '" data-persona-id="' + p.id + '">' +
-          '<div class="tile-row" data-maction="toggle" data-id="' + p.id + '">' +
-            '<div class="checkbox ' + (checked ? 'checked' : '') + '"><span class="material-symbols-outlined">check</span></div>' +
-            '<div class="tile-body">' +
-              '<div class="tile-name-row">' +
-                '<span class="tile-name">' + p.name + '</span>' +
-                (suggested ? '<span class="suggest-pill" title="' + String(this.suggestions[p.id] || '').replace(/"/g, '&quot;') + '">' + sparkle + 'Suggested</span>' : '') +
-              '</div>' +
-              '<div class="tile-desc">' + p.desc + '</div>' +
-            '</div>' +
-            '<div class="tile-avatar ' + (isOpen ? 'open' : '') + '"><img class="persona-icon" src="' + iconSrc(p.icon) + '" alt="' + p.name + '"></div>' +
+        '<a class="insight-card" href="' + esc(ins.url) + '" target="_blank" rel="noopener noreferrer">' +
+          (ins.type ? '<span class="insight-type">' + esc(ins.type) + '</span>' : '') +
+          '<div class="insight-title">' + esc(ins.title) + '</div>' +
+          '<div class="insight-snippet">' + esc(ins.snippet) + '</div>' +
+          '<div class="insight-source">' + esc(ins.source) + '<span class="material-symbols-outlined">arrow_outward</span></div>' +
+        '</a>';
+    }).join('');
+
+    return '' +
+      '<article class="detail-card ' + cls + '" id="card-' + p.id + '">' +
+        '<div class="detail-aside">' +
+          '<div class="detail-aside-head">' +
+            '<span class="seg-chip">' + esc(SEGMENT_LABELS[p.segment] || p.segment) + '</span>' +
+            '<h3 class="detail-name">' + esc(p.name) + '</h3>' +
           '</div>' +
-          (jtbd.length > 0 ? (isOpen ?
-            '<ul class="jtbd-list">' + jtbd.map(function (item, i) {
-              return '<li><span class="material-symbols-outlined jtbd-check ' + seg + '" style="animation-delay:' + (i * 120) + 'ms">check_circle</span>' + item + '</li>';
-            }).join('') + '</ul>' +
-            '<div class="expand-toggle open" data-maction="expand" data-id="' + p.id + '"><span class="expand-label">Hide jobs to be done</span><span class="material-symbols-outlined expand-chevron">expand_less</span></div>'
-          :
-            '<div class="expand-toggle" data-maction="expand" data-id="' + p.id + '"><span class="expand-label">View jobs to be done</span><span class="material-symbols-outlined expand-chevron">expand_more</span></div>'
-          ) : '') +
+          '<div class="detail-aside-art"><img src="' + iconSrc(p.icon) + '" alt="' + esc(p.name) + '"></div>' +
+        '</div>' +
+        '<div class="detail-body">' +
+          '<div class="detail-remove" role="button" tabindex="0" title="Remove" aria-label="Remove ' + esc(p.name) + '" data-remove="' + p.id + '"><span class="material-symbols-outlined">close</span></div>' +
+          '<p class="detail-desc">' + esc(p.desc) + '</p>' +
+          '<p class="detail-heading">Jobs to be done</p>' +
+          '<ul class="jtbd-list">' + jtbd + '</ul>' +
+          (insights ? '<p class="detail-heading">Insights &amp; news</p><div class="insight-grid">' + insights + '</div>' : '') +
+        '</div>' +
+      '</article>';
+  }
+
+  function renderDetail() {
+    var el = document.getElementById('detail');
+    var ordered = PERSONAS.filter(function (p) { return selected.has(p.id); });
+    if (ordered.length === 0) {
+      el.innerHTML = '' +
+        '<div class="empty">' +
+          '<span class="material-symbols-outlined">groups</span>' +
+          '<div class="empty-title">No personas selected</div>' +
+          '<div>Pick one or more personas above to see their jobs to be done and insights.</div>' +
         '</div>';
-    },
-
-    syncAvatars: function () {
-      this.overlay.querySelectorAll('.tile-avatar').forEach(function (avatar) {
-        if (!avatar.classList.contains('open')) { avatar.style.transform = ''; return; }
-        var tile = avatar.closest('.tile');
-        var toggle = tile.querySelector('.expand-toggle');
-        var list = tile.querySelector('.jtbd-list');
-        var drawerH = (toggle ? toggle.offsetHeight : 0) + (list ? list.offsetHeight : 0);
-        avatar.style.transform = 'translateY(-' + (drawerH - 6) + 'px) scale(0.945)';
-      });
-    },
-
-    splitColumns: function (list) {
-      var left = [], right = [], lw = 0, rw = 0, self = this;
-      list.forEach(function (p) {
-        var n = self.expanded.has(p.id) && Array.isArray(p.jtbd) ? p.jtbd.length : 0;
-        var w = 1 + n;
-        if (lw <= rw) { left.push(p); lw += w; } else { right.push(p); rw += w; }
-      });
-      return { left: left, right: right };
-    },
-
-    render: function () {
-      var hasSug = Object.keys(this.suggestions).length > 0;
-      document.getElementById('suggested-legend').style.display = hasSug ? 'inline-flex' : 'none';
-      var ordered = groupBySegment(DEFAULT_LIBRARY).reduce(function (acc, g) { return acc.concat(g.items); }, []);
-      var cols = this.splitColumns(ordered);
-      var self = this;
-      document.getElementById('tile-grid').innerHTML =
-        '<div class="tile-col">' + cols.left.map(function (p) { return self.renderTile(p); }).join('') + '</div>' +
-        '<div class="tile-col">' + cols.right.map(function (p) { return self.renderTile(p); }).join('') + '</div>';
-      this.syncAvatars();
-      var n = this.draft.size;
-      document.getElementById('selected-label').textContent =
-        n === 0 ? 'No personas selected' : n === 1 ? '1 persona selected' : n + ' personas selected';
-    },
-
-    close: function (payload) {
-      if (this.overlay) this.overlay.hidden = true;
-      var cb = this.onClose; this.onClose = null;
-      if (cb) cb(payload);
-    },
-
-    save: function () {
-      var ids = Array.from(this.draft);
-      var self = this;
-      invoke('setIssuePersonas', { ids: ids }).then(function () { self.close({ ids: ids }); });
-    },
-    cancel: function () { this.close(undefined); },
-    done: function () { this.close({ ids: Array.from(this.draft) }); }
-  };
-
-  // Delegated click handling for the modal overlay (wired once).
-  document.getElementById('pw-modal').addEventListener('click', function (e) {
-    // Click on the dimmed backdrop (outside the dialog) cancels/closes.
-    if (e.target.id === 'pw-modal') {
-      if (personaModal.mode === 'guide') personaModal.done(); else personaModal.cancel();
       return;
     }
-    var el = e.target.closest('[data-maction]');
-    if (!el) return;
-    var a = el.dataset.maction;
-    if (a === 'toggle') personaModal.toggle(el.dataset.id);
-    else if (a === 'expand') personaModal.toggleExpand(el.dataset.id);
-    else if (a === 'save') personaModal.save();
-    else if (a === 'cancel') personaModal.cancel();
-    else if (a === 'done') personaModal.done();
+    el.innerHTML = ordered.map(detailCard).join('');
+  }
+
+  function render() { renderPicker(); renderDetail(); }
+
+  function toggle(id) {
+    if (selected.has(id)) selected.delete(id); else selected.add(id);
+    saveSel();
+    render();
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  document.getElementById('picker').addEventListener('click', function (e) {
+    var card = e.target.closest('.pick-card'); if (card) toggle(card.dataset.id);
+  });
+  document.getElementById('picker').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var card = e.target.closest('.pick-card'); if (card) { e.preventDefault(); toggle(card.dataset.id); }
+  });
+  document.getElementById('detail').addEventListener('click', function (e) {
+    var rm = e.target.closest('[data-remove]'); if (rm) toggle(rm.dataset.remove);
+  });
+  document.getElementById('detail').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var rm = e.target.closest('[data-remove]'); if (rm) { e.preventDefault(); toggle(rm.dataset.remove); }
+  });
+  document.getElementById('btn-all').addEventListener('click', function () {
+    PERSONAS.forEach(function (p) { selected.add(p.id); }); saveSel(); render();
+  });
+  document.getElementById('btn-clear').addEventListener('click', function () {
+    selected.clear(); saveSel(); render();
   });
 
-  // ── Publish the shim as window.forge (the panel script's only dependency) ──
-  function Modal(opts) { this.opts = opts; }
-  Modal.prototype.open = function () { personaModal.open(this.opts); };
-
-  window.forge = {
-    view: {
-      getContext: function () { return Promise.resolve({ extension: { issue: { id: 'ABS-4821' } } }); },
-      close: function () {}
-    },
-    invoke: invoke,
-    Modal: Modal
-  };
-
-  // ── Demo controls (reset to sample / start from scratch) ──────────────────
-  document.querySelectorAll('[data-demo]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var mode = btn.dataset.demo;
-      state = mode === 'empty' ? { ids: [], jtbd: {} } : seedState();
-      saveState(state);
-      location.reload();
-    });
-  });
-})();
-</script>
-
-<script>
-/* ═══════════════════════════════════════════════════════════════════════════
-   PERSONA ISSUE PANEL — verbatim from static/ui/main/index.html
-   Depends only on window.forge (provided by the shim above).
-   ═══════════════════════════════════════════════════════════════════════════ */
-    let personas = [];
-    let committed = [];
-    let inheritedIds = new Set();
-    let parentKey = null;
-    let issueId = null;
-    let ticketText = '';
-    let issueJtbd = {};
-    let suggestions = {};
-
-    let wizardStep = null;
-    let wizardSelected = new Set();
-    let wizardJtbd = {};
-    let wizardGuideHintDismissed = false;
-
-    let lastCheckedKey = null;
-    let addJtbdStep = null;
-    let guideHintFading = false;
-
-    async function init() {
-      const context = await window.forge.view.getContext();
-      issueId = context.extension.issue.id;
-
-      const { personas: lib, ids, inherited, parentKey: pKey, jtbd, ticketText: text, suggestions: s } =
-        await window.forge.invoke('getPanelInit', { issueId });
-      personas = lib;
-      committed = ids;
-      inheritedIds = new Set(Array.isArray(inherited) ? inherited : []);
-      parentKey = pKey || null;
-      issueJtbd = jtbd || {};
-      ticketText = text || '';
-
-      if (committed.length === 0) {
-        suggestions = s || {};
-        wizardStep = 'select';
-        wizardSelected = new Set(Object.keys(suggestions));
-        scheduleGuideHintAutoDismiss();
-      }
-
-      renderPanel();
-    }
-
-    function scheduleGuideHintAutoDismiss() {
-      setTimeout(() => {
-        if (wizardGuideHintDismissed) return;
-        guideHintFading = true;
-        renderPanel();
-        setTimeout(() => {
-          if (wizardGuideHintDismissed) return;
-          wizardGuideHintDismissed = true;
-          guideHintFading = false;
-          renderPanel();
-        }, 300);
-      }, 4000);
-    }
-
-    function personaById(id) { return personas.find(p => p.id === id); }
-    function segClass(seg) { return String(seg || '').toLowerCase().replace(/\s+/g, '-'); }
-    const SEGMENT_LABELS = { 'Leave Takers': 'Submits Requests', 'Leave Managers': 'Manages Leave', 'Support': 'Provides Support' };
-    function segmentLabel(seg) { return SEGMENT_LABELS[seg] || seg; }
-
-    const SEGMENT_ORDER = ['Leave Takers', 'Leave Managers', 'Support'];
-    function groupBySegment(list) {
-      return SEGMENT_ORDER
-        .map(seg => ({ segment: seg, label: segmentLabel(seg), items: list.filter(p => p.segment === seg) }))
-        .filter(g => g.items.length > 0);
-    }
-    function wordsOf(s) { return (s.toLowerCase().match(/[a-z']+/g) || []).filter(w => w.length > 3); }
-
-    function relevantJtbdIndices(persona, text) {
-      const jtbd = Array.isArray(persona.jtbd) ? persona.jtbd : [];
-      const ticketWords = new Set(wordsOf(text || ''));
-      const relevant = new Set();
-      jtbd.forEach((line, i) => {
-        if (wordsOf(line).some(w => ticketWords.has(w))) relevant.add(i);
-      });
-      return relevant;
-    }
-
-    function effectiveJtbd(personaId, persona) {
-      const saved = issueJtbd[personaId];
-      if (saved) return [...(saved.checked || []), ...(saved.custom || [])];
-      return Array.isArray(persona.jtbd) ? persona.jtbd : [];
-    }
-
-    function renderPanel() {
-      const root = document.getElementById('panel-root');
-      const list = groupBySegment(committed.map(personaById).filter(Boolean)).flatMap(g => g.items);
-      const count = list.length;
-
-      const showGuideHint = count === 0 && wizardStep !== 'jtbd' && !wizardGuideHintDismissed;
-
-      let html = `
-        <div class="panel">
-          <div class="panel-head">
-            ${count === 0 ? renderWizardStepper() : `
-              <span class="material-symbols-outlined icon-lg">groups</span>
-              <div class="panel-title-row">
-                <span class="panel-title">The users this affects</span>
-                <span class="panel-count-pill">${count} persona${count === 1 ? '' : 's'}</span>
-              </div>`}
-            <span class="spacer"></span>
-            <div class="guide-btn-wrap">
-              <div class="guide-btn fx-btn" data-action="open-guide" title="Persona guide">
-                <span class="material-symbols-outlined icon-sm">menu_book</span>
-                <span>Persona guide</span>
-              </div>
-              ${showGuideHint ? `
-                <div class="guide-hint ${guideHintFading ? 'fading' : ''}">Need help? Learn more about each</div>` : ''}
-            </div>
-            ${count > 0 ? `
-              <div class="action-btn fx-btn" data-action="open">
-                <span class="material-symbols-outlined icon-sm">edit</span>
-                <span>Add or edit personas</span>
-              </div>` : ''}
-          </div>`;
-
-      if (addJtbdStep && addJtbdStep.length > 0) {
-        html += renderAddJtbdStep();
-      } else if (count === 0) {
-        html += wizardStep === 'jtbd' ? renderWizardStep2() : renderWizardStep1();
-      } else {
-        html += `
-          <div class="persona-carousel">
-            <div class="persona-cards" id="persona-cards">${list.map(renderCard).join('')}</div>
-            <div class="carousel-arrow fx-btn carousel-arrow-left" data-action="scroll-prev"><span class="material-symbols-outlined">chevron_left</span></div>
-            <div class="carousel-arrow fx-btn carousel-arrow-right" data-action="scroll-next"><span class="material-symbols-outlined">chevron_right</span></div>
-          </div>
-          <div class="carousel-dots" id="carousel-dots">${list.map((_, i) => `<span class="carousel-dot" data-action="scroll-to" data-index="${i}"></span>`).join('')}</div>`;
-      }
-
-      html += `</div>`;
-
-      root.innerHTML = html;
-      lastCheckedKey = null;
-      if (count > 0 && !(addJtbdStep && addJtbdStep.length > 0)) initCarousel();
-      syncJtbdArt();
-      syncQuoteHeights();
-      initQuoteAutoScroll();
-    }
-
-    let quoteAutoScrollTimers = [];
-    function initQuoteAutoScroll() {
-      quoteAutoScrollTimers.forEach(id => clearInterval(id));
-      quoteAutoScrollTimers = [];
-      document.querySelectorAll('.persona-quote-scroll').forEach(el => {
-        const bubbles = Array.from(el.querySelectorAll('.persona-quote'));
-        if (bubbles.length <= 1) return;
-        let active = bubbles.findIndex(b => b.classList.contains('quote-active'));
-        if (active < 0) active = 0;
-        const id = setInterval(() => {
-          const current = bubbles[active];
-          active = (active + 1) % bubbles.length;
-          const next = bubbles[active];
-          current.classList.remove('quote-active');
-          current.classList.add('quote-leaving');
-          next.classList.add('quote-active');
-          syncQuoteHeights();
-          setTimeout(() => current.classList.remove('quote-leaving'), 500);
-        }, 6000);
-        quoteAutoScrollTimers.push(id);
-      });
-    }
-
-    const QUOTE_MAX_HEIGHT = 128;
-    function syncQuoteHeights() {
-      document.querySelectorAll('.persona-quote-scroll').forEach(el => {
-        const active = el.querySelector('.persona-quote.quote-active') || el.querySelector('.persona-quote');
-        if (!active) return;
-        el.style.height = `${Math.min(active.offsetHeight, QUOTE_MAX_HEIGHT)}px`;
-      });
-    }
-
-    function syncJtbdArt() {
-      document.querySelectorAll('.wizard-jtbd-group').forEach(group => {
-        const art = group.querySelector('.wizard-jtbd-art');
-        const content = group.querySelector('.wizard-jtbd-content');
-        if (!art || !content) return;
-        art.style.height = `${content.offsetHeight}px`;
-      });
-    }
-
-    function renderCard(p) {
-      const seg = segClass(p.segment);
-      const jtbdFull = effectiveJtbd(p.id, p);
-      const insights = Array.isArray(p.insights) ? p.insights : [];
-      const quotes = jtbdFull.map(line => `I want to ${line.charAt(0).toLowerCase()}${line.slice(1)}`);
-      const nameWords = p.name.split(' ');
-      const lastWord = nameWords.pop();
-      const namePrefix = nameWords.length > 0 ? nameWords.join(' ') + ' ' : '';
-      const nameHtml = `${namePrefix}<span class="name-last-word">${lastWord}<span class="material-symbols-outlined expand-indicator">chevron_right</span></span>`;
-      return `
-        <div class="persona-card ${seg}">
-          <div class="persona-card-main" data-action="toggle-card">
-            <div class="persona-card-name">${nameHtml}</div>
-            ${inheritedIds.has(p.id) ? `
-              <div class="inherited-badge" title="Inherited from the parent epic${parentKey ? ` (${parentKey})` : ''} — manage it there">
-                <span class="material-symbols-outlined">arrow_downward</span>Inherited${parentKey ? ` · ${parentKey}` : ''}
-              </div>` : ''}
-            ${quotes.length > 0 ? `
-              <div class="persona-quote-scroll">
-                ${quotes.map((q, i) => `<div class="persona-quote ${i === 0 ? 'quote-active' : ''}">${q}</div>`).join('')}
-                ${quotes.length > 1 ? `
-                  <div class="quote-hint"><span>Click to see all</span><span class="material-symbols-outlined">arrow_forward</span></div>` : ''}
-              </div>` : ''}
-            <div class="persona-card-art"><img class="persona-icon" src="${iconSrc(p.icon)}" alt="${p.name}"></div>
-          </div>
-          <div class="persona-card-details">
-            <div class="persona-detail-inner">
-              <div class="persona-detail-desc">${p.desc}</div>
-              ${jtbdFull.length > 0 ? `
-                <div class="persona-detail-heading">Jobs to be done</div>
-                <ul class="persona-detail-jtbd">
-                  ${jtbdFull.map(item => `<li><span class="material-symbols-outlined jtbd-check ${seg}">check_circle</span>${item}</li>`).join('')}
-                </ul>` : ''}
-              ${insights.length > 0 ? `
-                <div class="persona-detail-heading insights-heading">Insights and news</div>
-                <div class="insight-cards">
-                  ${insights.map(ins => `
-                    <a class="insight-card" href="${ins.url}" target="_blank" rel="noopener noreferrer">
-                      ${ins.type ? `<div class="insight-type">${ins.type}</div>` : ''}
-                      <div class="insight-title">${ins.title}</div>
-                      <div class="insight-snippet">${ins.snippet}</div>
-                      <div class="insight-source">${ins.source}<span class="material-symbols-outlined insight-arrow">arrow_outward</span></div>
-                    </a>`).join('')}
-                </div>` : ''}
-            </div>
-          </div>
-        </div>`;
-    }
-
-    function renderWizardStepper() {
-      const step = wizardStep === 'jtbd' ? 2 : 1;
-      const renderStep = (n, label) => {
-        const state = n < step ? 'done' : n === step ? 'active' : 'upcoming';
-        const num = state === 'done' ? '<span class="material-symbols-outlined">check</span>' : n;
-        return `
-          <div class="wizard-stepper-step ${state}">
-            <span class="wizard-stepper-num">${num}</span>
-            <span class="wizard-stepper-label">${label}</span>
-          </div>`;
-      };
-      return `
-        <div class="wizard-stepper">
-          ${renderStep(1, 'Select personas')}
-          <span class="wizard-stepper-connector ${step > 1 ? 'filled' : ''}"></span>
-          ${renderStep(2, 'Add jobs to be done')}
-        </div>`;
-    }
-
-    function renderMiniPersonaCard(p) {
-      const seg = segClass(p.segment);
-      const checked = wizardSelected.has(p.id);
-      const suggested = !!suggestions[p.id];
-      const justChecked = lastCheckedKey === `wizard:${p.id}`;
-
-      return `
-        <div class="mini-persona-card ${seg} ${checked ? 'checked' : ''}" data-action="wizard-toggle-persona" data-id="${p.id}">
-          <div class="mini-persona-top">
-            <div class="checkbox ${checked ? 'checked' : ''} ${justChecked ? 'just-checked' : ''}"><span class="material-symbols-outlined">check</span></div>
-            ${suggested ? `<span class="suggest-pill">Suggested</span>` : ''}
-          </div>
-          <div class="mini-persona-art"><img class="persona-icon" src="${iconSrc(p.icon)}" alt="${p.name}"></div>
-          <div class="mini-persona-name">${p.name}</div>
-          <div class="mini-persona-learn-more" data-action="wizard-learn-more" data-id="${p.id}">Learn more</div>
-        </div>`;
-    }
-
-    function renderWizardStep1() {
-      const groups = groupBySegment(personas);
-      const legend = groups.map(g => `
-        <span class="wizard-legend-item"><span class="persona-group-dot ${segClass(g.segment)}"></span>${g.label}</span>`).join('');
-      const cards = groups.flatMap(g => g.items).map(renderMiniPersonaCard).join('');
-
-      const n = wizardSelected.size;
-      return `
-        <div class="wizard">
-          <div class="wizard-head">
-            <div class="wizard-title">First, select which personas this ticket affects.</div>
-            <div class="wizard-sub">We've suggested the ones that look relevant but choose all that apply.</div>
-          </div>
-          <div class="wizard-legend">${legend}</div>
-          <div class="mini-persona-grid">${cards}</div>
-          <div class="wizard-footer">
-            <span class="wizard-count">${n === 0 ? 'None selected' : n === 1 ? '1 selected' : `${n} selected`}</span>
-            <span class="spacer"></span>
-            <div class="btn fx-btn btn-primary ${n === 0 ? 'disabled' : ''}" data-action="wizard-next">Next</div>
-          </div>
-        </div>`;
-    }
-
-    function renderJtbdEditor(personaIds, { showBack, doneAction, subtitle }) {
-      const selectedPersonas = personaIds.map(personaById).filter(Boolean);
-
-      const groups = groupBySegment(selectedPersonas).map(g => {
-        const groupItems = g.items.map(p => {
-          const seg = segClass(p.segment);
-          const jtbd = Array.isArray(p.jtbd) ? p.jtbd : [];
-          const relevant = relevantJtbdIndices(p, ticketText);
-          const state = wizardJtbd[p.id] || (wizardJtbd[p.id] = { checkedIdx: new Set(relevant), custom: [] });
-
-          const items = jtbd.map((line, i) => {
-            const checked = state.checkedIdx.has(i);
-            const isRelevant = relevant.has(i);
-            const justChecked = lastCheckedKey === `jtbd:${p.id}:${i}`;
-            return `
-              <div class="wizard-jtbd-item ${checked ? 'checked' : ''}" data-action="wizard-toggle-jtbd" data-persona="${p.id}" data-index="${i}">
-                <div class="checkbox ${checked ? 'checked' : ''} ${justChecked ? 'just-checked' : ''}"><span class="material-symbols-outlined">check</span></div>
-                <span class="wizard-jtbd-text">${line}</span>
-                ${isRelevant ? `<span class="suggest-pill">Suggested</span>` : ''}
-              </div>`;
-          }).join('');
-
-          const customItems = state.custom.map((line, ci) => {
-            const justChecked = lastCheckedKey === `jtbd-custom:${p.id}:${ci}`;
-            return `
-            <div class="wizard-jtbd-item checked custom">
-              <div class="checkbox checked ${justChecked ? 'just-checked' : ''}"><span class="material-symbols-outlined">check</span></div>
-              <span class="wizard-jtbd-text">${line}</span>
-              <span class="material-symbols-outlined wizard-remove-icon" data-action="wizard-remove-custom" data-persona="${p.id}" data-index="${ci}">close</span>
-            </div>`;
-          }).join('');
-
-          return `
-            <div class="wizard-jtbd-group ${seg}">
-              <div class="wizard-jtbd-art ${seg}"><img class="persona-icon" src="${iconSrc(p.icon)}" alt="${p.name}"></div>
-              <div class="wizard-jtbd-content">
-                <div class="wizard-jtbd-persona-name">As a <span class="wizard-jtbd-persona-highlight">${p.name}</span>, I want to…</div>
-                <div class="wizard-jtbd-list">${items}${customItems}</div>
-                <div class="wizard-add-row">
-                  <input type="text" class="wizard-add-input" data-persona="${p.id}" placeholder="Add a job to be done…">
-                  <div class="wizard-add-btn fx-btn" data-action="wizard-add-custom" data-persona="${p.id}">
-                    <span class="material-symbols-outlined icon-sm">add</span>Add
-                  </div>
-                </div>
-              </div>
-            </div>`;
-        }).join('');
-        return groupItems;
-      }).join('');
-
-      return `
-        <div class="wizard">
-          <div class="wizard-head">
-            <div class="wizard-sub">${subtitle}</div>
-          </div>
-          <div class="wizard-jtbd-groups">${groups}</div>
-          <div class="wizard-footer">
-            ${showBack ? `<div class="btn fx-btn btn-secondary" data-action="wizard-back">Back</div>` : ''}
-            <span class="spacer"></span>
-            <div class="btn fx-btn btn-primary" data-action="${doneAction}">Done</div>
-          </div>
-        </div>`;
-    }
-
-    function renderWizardStep2() {
-      return renderJtbdEditor(Array.from(wizardSelected), {
-        showBack: true, doneAction: 'wizard-done',
-        subtitle: 'Select all the jobs to be done that are relevant for this ticket.',
-      });
-    }
-
-    function renderAddJtbdStep() {
-      const n = addJtbdStep.length;
-      return renderJtbdEditor(addJtbdStep, {
-        showBack: false, doneAction: 'add-jtbd-done',
-        subtitle: `Add jobs to be done before adding the persona${n === 1 ? '' : 's'}.`,
-      });
-    }
-
-    function addWizardCustomJtbd(personaId) {
-      const input = document.querySelector(`.wizard-add-input[data-persona="${personaId}"]`);
-      if (!input) return;
-      const val = input.value.trim();
-      if (!val) return;
-      const state = wizardJtbd[personaId] || (wizardJtbd[personaId] = { checkedIdx: new Set(), custom: [] });
-      state.custom.push(val);
-      lastCheckedKey = `jtbd-custom:${personaId}:${state.custom.length - 1}`;
-      renderPanel();
-      const newInput = document.querySelector(`.wizard-add-input[data-persona="${personaId}"]`);
-      if (newInput) newInput.focus();
-    }
-
-    async function finishWizard() {
-      const ids = Array.from(wizardSelected);
-      const jtbdPayload = {};
-      ids.forEach(id => {
-        const p = personaById(id);
-        const state = wizardJtbd[id] || { checkedIdx: new Set(), custom: [] };
-        const checked = Array.isArray(p?.jtbd) ? p.jtbd.filter((_, i) => state.checkedIdx.has(i)) : [];
-        jtbdPayload[id] = { checked, custom: state.custom.slice() };
-      });
-
-      committed = ids;
-      issueJtbd = jtbdPayload;
-      wizardStep = null;
-      wizardSelected = new Set();
-      wizardJtbd = {};
-      renderPanel();
-
-      await window.forge.invoke('setIssuePersonas', { issueId, ids, jtbd: jtbdPayload });
-    }
-
-    async function finishAddJtbd() {
-      const ids = addJtbdStep || [];
-      ids.forEach(id => {
-        const p = personaById(id);
-        const state = wizardJtbd[id] || { checkedIdx: new Set(), custom: [] };
-        const checked = Array.isArray(p?.jtbd) ? p.jtbd.filter((_, i) => state.checkedIdx.has(i)) : [];
-        issueJtbd[id] = { checked, custom: state.custom.slice() };
-        delete wizardJtbd[id];
-      });
-
-      addJtbdStep = null;
-      renderPanel();
-
-      await window.forge.invoke('setIssuePersonas', { issueId, ids: committed, jtbd: issueJtbd });
-    }
-
-    function initCarousel() {
-      const track = document.getElementById('persona-cards');
-      if (!track) return;
-
-      const syncCarousel = () => {
-        const max = track.scrollWidth - track.clientWidth;
-        const left = document.querySelector('.carousel-arrow-left');
-        const right = document.querySelector('.carousel-arrow-right');
-        if (left) left.classList.toggle('disabled', track.scrollLeft <= 2);
-        if (right) right.classList.toggle('disabled', track.scrollLeft >= max - 2);
-
-        const cards = Array.from(track.querySelectorAll('.persona-card'));
-        const center = track.scrollLeft + track.clientWidth / 2;
-        let closest = 0, closestDist = Infinity;
-        cards.forEach((c, i) => {
-          const dist = Math.abs((c.offsetLeft + c.offsetWidth / 2) - center);
-          if (dist < closestDist) { closestDist = dist; closest = i; }
-        });
-        document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === closest));
-      };
-
-      track.addEventListener('scroll', syncCarousel);
-      syncCarousel();
-    }
-
-    function openPersonaModal(mode, opts) {
-      const isGuide = mode === 'guide';
-      const inWizard = isGuide && !!wizardStep;
-      const ids = inWizard ? Array.from(wizardSelected) : committed;
-      const modal = new window.forge.Modal({
-        resource: 'modal',
-        size: 'large',
-        context: { issueId, mode: isGuide ? 'guide' : 'edit', ids, expandId: opts?.expandId },
-        onClose: (payload) => {
-          if (!payload || !Array.isArray(payload.ids)) return;
-          if (inWizard) {
-            wizardSelected = new Set(payload.ids);
-            renderPanel();
-            return;
-          }
-
-          const previousIds = committed;
-          committed = payload.ids;
-
-          if (committed.length === 0) {
-            wizardStep = 'select';
-            wizardSelected = new Set();
-            renderPanel();
-            return;
-          }
-
-          const newIds = payload.ids.filter(id => !previousIds.includes(id));
-          if (newIds.length > 0) {
-            addJtbdStep = newIds;
-            newIds.forEach(id => {
-              const p = personaById(id);
-              const relevant = relevantJtbdIndices(p, ticketText);
-              wizardJtbd[id] = { checkedIdx: new Set(relevant), custom: [] };
-            });
-            renderPanel();
-            return;
-          }
-
-          renderPanel();
-          if (isGuide) {
-            window.forge.invoke('setIssuePersonas', { issueId, ids: committed });
-          }
-        },
-      });
-      modal.open();
-    }
-
-    document.addEventListener('click', (e) => {
-      const openEl = e.target.closest('[data-action="open"]');
-      if (openEl) { openPersonaModal('edit'); return; }
-
-      const openGuideEl = e.target.closest('[data-action="open-guide"]');
-      if (openGuideEl) { wizardGuideHintDismissed = true; openPersonaModal('guide'); return; }
-
-      const toggleEl = e.target.closest('[data-action="toggle-card"]');
-      if (toggleEl) {
-        const card = toggleEl.closest('.persona-card');
-        const wasExpanded = card.classList.contains('expanded');
-        document.querySelectorAll('.persona-card.expanded').forEach(c => {
-          c.classList.remove('expanded');
-          const icon = c.querySelector('.expand-indicator');
-          if (icon) icon.textContent = 'chevron_right';
-        });
-        if (!wasExpanded) {
-          card.classList.add('expanded');
-          const icon = card.querySelector('.expand-indicator');
-          if (icon) icon.textContent = 'close';
-          let scrolled = false;
-          const doScroll = () => {
-            if (scrolled) return;
-            scrolled = true;
-            card.removeEventListener('transitionend', onTransitionEnd);
-            card.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-          };
-          const onTransitionEnd = (ev) => { if (ev.target === card && ev.propertyName === 'width') doScroll(); };
-          card.addEventListener('transitionend', onTransitionEnd);
-          setTimeout(doScroll, 500);
-        }
-        return;
-      }
-
-      const prevEl = e.target.closest('[data-action="scroll-prev"]');
-      if (prevEl) { document.getElementById('persona-cards')?.scrollBy({ left: -240, behavior: 'smooth' }); return; }
-
-      const nextEl = e.target.closest('[data-action="scroll-next"]');
-      if (nextEl) { document.getElementById('persona-cards')?.scrollBy({ left: 240, behavior: 'smooth' }); return; }
-
-      const dotEl = e.target.closest('[data-action="scroll-to"]');
-      if (dotEl) {
-        const card = document.querySelectorAll('.persona-card')[Number(dotEl.dataset.index)];
-        card?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-        return;
-      }
-
-      const wizLearnMoreEl = e.target.closest('[data-action="wizard-learn-more"]');
-      if (wizLearnMoreEl) { openPersonaModal('guide', { expandId: wizLearnMoreEl.dataset.id }); return; }
-
-      const wizPersonaEl = e.target.closest('[data-action="wizard-toggle-persona"]');
-      if (wizPersonaEl) {
-        const id = wizPersonaEl.dataset.id;
-        if (wizardSelected.has(id)) {
-          wizardSelected.delete(id);
-        } else {
-          wizardSelected.add(id);
-          lastCheckedKey = `wizard:${id}`;
-        }
-        renderPanel();
-        return;
-      }
-
-      const wizNextEl = e.target.closest('[data-action="wizard-next"]');
-      if (wizNextEl) {
-        if (wizardSelected.size === 0) return;
-        wizardStep = 'jtbd';
-        wizardGuideHintDismissed = true;
-        renderPanel();
-        return;
-      }
-
-      const wizBackEl = e.target.closest('[data-action="wizard-back"]');
-      if (wizBackEl) { wizardStep = 'select'; renderPanel(); return; }
-
-      const wizJtbdEl = e.target.closest('[data-action="wizard-toggle-jtbd"]');
-      if (wizJtbdEl) {
-        const state = wizardJtbd[wizJtbdEl.dataset.persona];
-        const idx = Number(wizJtbdEl.dataset.index);
-        if (state) {
-          if (state.checkedIdx.has(idx)) {
-            state.checkedIdx.delete(idx);
-          } else {
-            state.checkedIdx.add(idx);
-            lastCheckedKey = `jtbd:${wizJtbdEl.dataset.persona}:${idx}`;
-          }
-        }
-        renderPanel();
-        return;
-      }
-
-      const wizAddEl = e.target.closest('[data-action="wizard-add-custom"]');
-      if (wizAddEl) { addWizardCustomJtbd(wizAddEl.dataset.persona); return; }
-
-      const wizRemoveEl = e.target.closest('[data-action="wizard-remove-custom"]');
-      if (wizRemoveEl) {
-        const state = wizardJtbd[wizRemoveEl.dataset.persona];
-        if (state) state.custom.splice(Number(wizRemoveEl.dataset.index), 1);
-        renderPanel();
-        return;
-      }
-
-      const wizDoneEl = e.target.closest('[data-action="wizard-done"]');
-      if (wizDoneEl) { finishWizard(); return; }
-
-      const addJtbdDoneEl = e.target.closest('[data-action="add-jtbd-done"]');
-      if (addJtbdDoneEl) { finishAddJtbd(); return; }
-    });
-
-    document.getElementById('panel-root').addEventListener('mousemove', (e) => {
-      const btn = e.target.closest('.fx-btn');
-      if (!btn) return;
-      const rect = btn.getBoundingClientRect();
-      const relX = (e.clientX - rect.left) / rect.width;
-      const relY = (e.clientY - rect.top) / rect.height;
-      const dx = relX - 0.5, dy = relY - 0.5;
-      btn.style.setProperty('--fx-px', `${relX * 100}%`);
-      btn.style.setProperty('--fx-py', `${relY * 100}%`);
-      btn.style.setProperty('--fx-sx', `${-dx * 18}px`);
-      btn.style.setProperty('--fx-sy', `${-dy * 18 + 4}px`);
-      btn.style.setProperty('--fx-tx', `${dx * 3}px`);
-      btn.style.setProperty('--fx-ty', `${dy * 3}px`);
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.classList.contains('wizard-add-input')) {
-        e.preventDefault();
-        addWizardCustomJtbd(e.target.dataset.persona);
-      }
-    });
-
-    init();
+  render();
 </script>
