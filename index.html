@@ -184,18 +184,20 @@
   .detail-card.leave-takers .detail-aside { background: linear-gradient(165deg, #DAEDF1 0%, #EFF8FA 60%); }
   .detail-card.leave-managers .detail-aside { background: linear-gradient(165deg, #FDE3CA 0%, #FFF4EA 60%); }
   .detail-card.support .detail-aside { background: linear-gradient(165deg, #D2F0E4 0%, #EDFAF4 60%); }
+  .detail-aside-head { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; }
   .seg-chip {
-    align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 10px;
+    display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 10px;
     border-radius: 100px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #fff;
   }
   .detail-card.leave-takers .seg-chip { background: rgba(6,69,87,0.82); }
   .detail-card.leave-managers .seg-chip { background: rgba(139,69,10,0.82); }
   .detail-card.support .seg-chip { background: rgba(11,92,69,0.82); }
   .detail-name {
-    align-self: flex-start; font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.2;
-    color: var(--ink); margin: 14px 0 0;
+    font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.2;
+    color: var(--ink); margin: 0;
   }
-  .detail-aside-art { margin-top: auto; height: 190px; display: flex; align-items: flex-end; justify-content: center; }
+  .detail-desc { font-size: 13.5px; line-height: 19px; color: var(--ink); margin: 0; }
+  .detail-aside-art { margin-top: auto; padding-top: 16px; height: 168px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: center; }
   .detail-aside-art img { width: auto; height: 100%; display: block; transform: translateY(4px); }
 
   /* Right: content */
@@ -207,7 +209,6 @@
   }
   .detail-remove:hover { background: #F1F1F1; color: var(--ink); }
   .detail-remove .material-symbols-outlined { font-size: 19px; }
-  .detail-desc { font-size: 14.5px; line-height: 21px; color: var(--ink); max-width: 60ch; margin: 0 44px 20px 0; }
 
   .detail-heading {
     font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;
@@ -446,12 +447,12 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
           '<div class="detail-aside-head">' +
             '<span class="seg-chip">' + esc(SEGMENT_LABELS[p.segment] || p.segment) + '</span>' +
             '<h3 class="detail-name">' + esc(p.name) + '</h3>' +
+            '<p class="detail-desc">' + esc(p.desc) + '</p>' +
           '</div>' +
           '<div class="detail-aside-art"><img src="' + iconSrc(p.icon) + '" alt="' + esc(p.name) + '"></div>' +
         '</div>' +
         '<div class="detail-body">' +
           '<div class="detail-remove" role="button" tabindex="0" title="Remove" aria-label="Remove ' + esc(p.name) + '" data-remove="' + p.id + '"><span class="material-symbols-outlined">close</span></div>' +
-          '<p class="detail-desc">' + esc(p.desc) + '</p>' +
           '<p class="detail-heading">Jobs to be done</p>' +
           '<ul class="jtbd-list">' + jtbd + '</ul>' +
           (insights ? '<p class="detail-heading">Insights &amp; news</p><div class="insight-grid">' + insights + '</div>' : '') +
