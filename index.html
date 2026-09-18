@@ -45,9 +45,46 @@
   .lede { font-size: 14px; line-height: 20px; color: var(--ink-soft); max-width: 68ch; margin: 0; }
 
   /* ── Section scaffolding ────────────────────────────────────────────────── */
-  .pick-section { flex-shrink: 0; }
+  .pick-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .pick-section .section-head { flex-shrink: 0; }
+  #picker { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
   .detail-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin: 22px 0 14px; }
+
+  /* Step 1 footer with the Next action */
+  .select-footer {
+    flex-shrink: 0; display: flex; align-items: center; gap: 12px;
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+  }
+  .foot-count { font-size: 13px; color: var(--ink-soft); }
+  .btn-next {
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 20px;
+    border-radius: 9px; border: 0; background: var(--ext-accent); color: #fff;
+    font-family: var(--font-body); font-weight: 700; font-size: 14px;
+    transition: background .15s ease, opacity .15s ease, transform .12s ease;
+  }
+  .btn-next:hover:not([disabled]) { background: #0A7591; }
+  .btn-next:active:not([disabled]) { transform: translateY(1px); }
+  .btn-next[disabled] { opacity: .4; pointer-events: none; }
+  .btn-next .material-symbols-outlined { font-size: 19px; }
+
+  /* Step 2 top bar (shown when the picker is collapsed) */
+  .explore-bar {
+    flex-shrink: 0; display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line);
+  }
+  .explore-title {
+    font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--ink);
+    display: flex; align-items: center; gap: 10px; min-width: 0;
+  }
+  .btn-back {
+    cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 13px;
+    border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ext-accent);
+    font-family: var(--font-body); font-weight: 700; font-size: 13px; white-space: nowrap; flex-shrink: 0;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .btn-back:hover { background: #EEF6F8; border-color: #BFD9E0; }
+  .btn-back .material-symbols-outlined { font-size: 18px; }
   .section-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: var(--ink); margin: 0; }
   .section-hint { font-size: 13px; color: var(--ink-soft); }
   .section-head .spacer { flex: 1; }
@@ -201,6 +238,8 @@
   @media (max-width: 720px), (max-height: 640px) {
     body { overflow: auto; }
     .wrap { height: auto; min-height: 100%; display: block; }
+    .pick-section { display: block; }
+    #picker { overflow: visible; }
     .detail-section { display: block; }
     .detail-list { overflow: visible; }
   }
@@ -219,29 +258,38 @@
   }
 </style>
 
-<div class="wrap">
-  <header>
+<div class="wrap" id="wrap" data-mode="select">
+  <header id="intro">
     <p class="eyebrow">AbsenceSoft</p>
     <h1 class="title">Product Personas</h1>
     <p class="lede">Seven people our leave &amp; accommodation product is built for, across three segments. Pick the personas you want to learn about to see who they are, the jobs they're trying to get done, and what the research says about them.</p>
   </header>
 
-  <section class="pick-section" aria-labelledby="pick-title">
+  <!-- Step 2 top bar (shown once the picker is collapsed) -->
+  <div class="explore-bar" id="explore-bar" hidden>
+    <button class="btn-back" type="button" id="btn-back"><span class="material-symbols-outlined">arrow_back</span>Back to selection</button>
+    <div class="explore-title">Learn more about each persona <span class="count-pill" id="explore-count">0</span></div>
+  </div>
+
+  <section class="pick-section" id="pick-section" aria-labelledby="pick-title">
     <div class="section-head">
       <h2 class="section-title" id="pick-title">Select personas to explore</h2>
+      <span class="section-hint">Choose one or more, then continue</span>
       <span class="spacer"></span>
-      <span class="count-pill" id="count-pill">0 selected</span>
       <button class="toolbtn" type="button" id="btn-all"><span class="material-symbols-outlined">done_all</span>Select all</button>
       <button class="toolbtn" type="button" id="btn-clear"><span class="material-symbols-outlined">restart_alt</span>Clear</button>
     </div>
     <div id="picker"></div>
   </section>
 
-  <section class="detail-section" aria-labelledby="detail-title">
-    <div class="section-head">
-      <h2 class="section-title" id="detail-title">Learn more about each persona</h2>
-      <span class="section-hint">See their goals, known as Jobs to be done, and some latest insights</span>
-    </div>
+  <!-- Step 1 footer with the Next action -->
+  <div class="select-footer" id="select-footer">
+    <span class="foot-count" id="foot-count">No personas selected</span>
+    <span class="spacer"></span>
+    <button class="btn-next" type="button" id="btn-next" disabled>Next<span class="material-symbols-outlined">arrow_forward</span></button>
+  </div>
+
+  <section class="detail-section" id="detail-section" hidden aria-labelledby="detail-title">
     <div class="detail-list" id="detail"></div>
   </section>
 </div>
@@ -334,6 +382,8 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
   var selected = new Set(loadSel().filter(byId));
   function saveSel() { try { localStorage.setItem(LS_KEY, JSON.stringify(Array.from(selected))); } catch (e) {} }
 
+  var mode = 'select'; // 'select' (picker) | 'explore' (collapsed picker, big cards)
+
   // ── Render: picker ────────────────────────────────────────────────────────
   function renderPicker() {
     var groups = SEGMENT_ORDER
@@ -359,9 +409,12 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
     }).join('');
 
     var n = selected.size;
-    document.getElementById('count-pill').textContent = n + ' selected';
+    document.getElementById('foot-count').textContent =
+      n === 0 ? 'No personas selected' : n === 1 ? '1 persona selected' : n + ' personas selected';
+    document.getElementById('explore-count').textContent = n;
     document.getElementById('btn-all').disabled = n === PERSONAS.length;
     document.getElementById('btn-clear').disabled = n === 0;
+    document.getElementById('btn-next').disabled = n === 0;
   }
 
   // ── Render: detail ────────────────────────────────────────────────────────
@@ -414,10 +467,22 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
     el.innerHTML = ordered.map(detailCard).join('');
   }
 
-  function render() { renderPicker(); renderDetail(); }
+  function updateMode() {
+    var explore = mode === 'explore';
+    document.getElementById('intro').hidden = explore;
+    document.getElementById('pick-section').hidden = explore;
+    document.getElementById('select-footer').hidden = explore;
+    document.getElementById('explore-bar').hidden = !explore;
+    document.getElementById('detail-section').hidden = !explore;
+    document.getElementById('wrap').dataset.mode = mode;
+  }
+
+  function render() { renderPicker(); renderDetail(); updateMode(); }
 
   function toggle(id) {
     if (selected.has(id)) selected.delete(id); else selected.add(id);
+    // Removing the last persona while reading returns to the picker.
+    if (mode === 'explore' && selected.size === 0) mode = 'select';
     saveSel();
     render();
   }
@@ -442,6 +507,14 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
   });
   document.getElementById('btn-clear').addEventListener('click', function () {
     selected.clear(); saveSel(); render();
+  });
+  document.getElementById('btn-next').addEventListener('click', function () {
+    if (selected.size === 0) return;
+    mode = 'explore'; render();
+    var d = document.getElementById('detail'); if (d) d.scrollTop = 0;
+  });
+  document.getElementById('btn-back').addEventListener('click', function () {
+    mode = 'select'; render();
   });
 
   render();
