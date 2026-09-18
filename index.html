@@ -197,6 +197,20 @@
     color: var(--ink); margin: 0;
   }
   .detail-desc { font-size: 15px; line-height: 21px; color: var(--ink); margin: 0; }
+  .feels { width: 100%; }
+  .feels-label {
+    font-family: var(--font-display); font-weight: 700; font-size: 10.5px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-soft); margin: 0 0 8px;
+  }
+  .feels-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .feels-list li { display: flex; align-items: center; gap: 8px; font-size: 13.5px; line-height: 17px; color: var(--ink); }
+  .feels-ico {
+    font-size: 19px; flex-shrink: 0;
+    width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .leave-takers .feels-ico { color: var(--ext-accent); background: var(--ext-tint); }
+  .leave-managers .feels-ico { color: var(--int-accent); background: var(--int-tint); }
+  .support .feels-ico { color: var(--sup-accent); background: var(--sup-tint); }
   .detail-aside-art { margin-top: auto; padding-top: 16px; height: 202px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: center; }
   .detail-aside-art img { width: auto; height: 100%; display: block; transform: translateY(4px); }
 
@@ -374,6 +388,46 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
       ] }
   ];
 
+  // How each persona tends to feel when interacting with AbsenceSoft.
+  // Icons are Material Symbols Outlined names.
+  var FEELS = {
+    exp: [
+      { icon: 'payments', text: 'Watchful over pay accuracy' },
+      { icon: 'replay', text: 'Impatient re-entering info' },
+      { icon: 'task_alt', text: 'Reassured by clear next steps' }
+    ],
+    first: [
+      { icon: 'sentiment_stressed', text: 'Anxious, unsure where to start' },
+      { icon: 'help', text: 'Worried about doing it wrong' },
+      { icon: 'lightbulb', text: 'Relieved by step-by-step guidance' }
+    ],
+    peoplemgr: [
+      { icon: 'groups', text: 'Protective of their team' },
+      { icon: 'hourglass_empty', text: 'Stretched covering the gap' },
+      { icon: 'visibility_off', text: 'Cautious about overstepping' }
+    ],
+    hradmin: [
+      { icon: 'verified_user', text: 'Accountable for compliance' },
+      { icon: 'rule', text: 'Wary of policy gaps' },
+      { icon: 'tune', text: "In control once it's configured" }
+    ],
+    casemgr: [
+      { icon: 'schedule', text: 'Under constant deadline pressure' },
+      { icon: 'layers', text: 'Juggling a full caseload' },
+      { icon: 'fact_check', text: 'Focused on getting it right' }
+    ],
+    support: [
+      { icon: 'timer', text: 'Time-pressured on every ticket' },
+      { icon: 'visibility_off', text: 'Frustrated without visibility' },
+      { icon: 'build', text: 'Confident with the right tools' }
+    ],
+    proserv: [
+      { icon: 'rocket_launch', text: 'Owns the go-live outcome' },
+      { icon: 'database', text: 'Wary of legacy-data risk' },
+      { icon: 'school', text: 'Proud when the team is self-sufficient' }
+    ]
+  };
+
   var SEGMENT_LABELS = { 'Leave Takers': 'Submits Requests', 'Leave Managers': 'Manages Leave', 'Support': 'Provides Support' };
   var SEGMENT_ORDER = ['Leave Takers', 'Leave Managers', 'Support'];
   function segClass(seg) { return String(seg || '').toLowerCase().replace(/\s+/g, '-'); }
@@ -427,6 +481,12 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
   // ── Render: detail ────────────────────────────────────────────────────────
   function detailCard(p) {
     var cls = segClass(p.segment);
+    var feels = (FEELS[p.id] || []).map(function (f) {
+      return '<li><span class="material-symbols-outlined feels-ico">' + esc(f.icon) + '</span>' + esc(f.text) + '</li>';
+    }).join('');
+    var feelsBlock = feels
+      ? '<div class="feels"><p class="feels-label">How they feel</p><ul class="feels-list">' + feels + '</ul></div>'
+      : '';
     var jtbd = (p.jtbd || []).map(function (j) {
       return '<li><span class="material-symbols-outlined jtbd-check">check_circle</span>' + esc(j) + '</li>';
     }).join('');
@@ -446,6 +506,7 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
             '<span class="seg-chip">' + esc(SEGMENT_LABELS[p.segment] || p.segment) + '</span>' +
             '<h3 class="detail-name">' + esc(p.name) + '</h3>' +
             '<p class="detail-desc">' + esc(p.desc) + '</p>' +
+            feelsBlock +
           '</div>' +
           '<div class="detail-aside-art"><img src="' + iconSrc(p.icon) + '" alt="' + esc(p.name) + '"></div>' +
         '</div>' +
