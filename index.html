@@ -52,7 +52,7 @@
      column) without shifting the grid out of alignment with the heading. */
   #picker { flex: 1; min-height: 0; overflow-y: auto; padding: 6px; margin: 0 -6px; }
   .detail-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  .section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin: 22px 0 14px; }
+  .section-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 22px 0 14px; }
 
   /* Step 1 footer with the Next action */
   .select-footer {
@@ -61,7 +61,8 @@
   }
   .foot-count { font-size: 13px; color: var(--ink-soft); }
   .btn-next {
-    cursor: pointer; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 20px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 40px; padding: 0 40px; min-width: 200px;
     border-radius: 9px; border: 0; background: var(--ext-accent); color: #fff;
     font-family: var(--font-body); font-weight: 700; font-size: 14px;
     transition: background .15s ease, opacity .15s ease, transform .12s ease;
@@ -88,8 +89,9 @@
   }
   .btn-back:hover { background: #EEF6F8; border-color: #BFD9E0; }
   .btn-back .material-symbols-outlined { font-size: 18px; }
-  .section-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: var(--ink); margin: 0; }
+  .section-title { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: 0.01em; color: var(--ink); margin: 0; line-height: 1.2; }
   .section-hint { font-size: 13px; color: var(--ink-soft); }
+  .pick-heading { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .section-head .spacer { flex: 1; }
   .toolbtn {
     cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 11px;
@@ -276,8 +278,10 @@
 
   <section class="pick-section" id="pick-section" aria-labelledby="pick-title">
     <div class="section-head">
-      <h2 class="section-title" id="pick-title">Select personas to explore</h2>
-      <span class="section-hint">Choose one or more, then continue</span>
+      <div class="pick-heading">
+        <h2 class="section-title" id="pick-title">Select which personas you want to explore</h2>
+        <span class="section-hint">Choose one or more, then continue</span>
+      </div>
       <span class="spacer"></span>
       <button class="toolbtn" type="button" id="btn-all"><span class="material-symbols-outlined">done_all</span>Select all</button>
       <button class="toolbtn" type="button" id="btn-clear"><span class="material-symbols-outlined">restart_alt</span>Clear</button>
