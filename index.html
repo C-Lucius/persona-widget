@@ -334,56 +334,57 @@ function iconSrc(name){ return (window.__PERSONA_ICONS && window.__PERSONA_ICONS
       desc: 'A repeat leave-taker who knows the process, watches pay accuracy closely, and plans ahead for handoffs and returning to work.',
       jtbd: ['Trust my leave balance is right before I act on it','Stay confident my pay stays accurate throughout my leave — no surprises','Complete any leave task quickly without re-entering what I’ve already provided','Know what to expect at each step, from request through return to work'],
       insights: [
-        { type: "Guidance", title: "FMLA Guidance: DOL Warns Against Shortchanging Employees' Intermittent Leave Hours", source: "Steptoe & Johnson", url: "https://www.steptoe-johnson.com/news/fmla-guidance-dol-warns-against-shortchanging-employees-intermittent-leave-hours/" },
-        { type: "Guidance", title: "Building Smarter Stay-at-Work and Return-to-Work Strategies", source: "DMEC", url: "https://dmec.org/resources/work-magazine/building-smarter-stay-at-work-and-return-to-work-strategies/" },
-        { type: "Trend", title: "Introducing a new HR tech category: Leave experience management", source: "HR Brew", url: "https://www.hr-brew.com/stories/2025/09/18/introducing-a-new-hr-tech-category-leave-experience-management" }
+        { type: 'Research', title: 'Pay continuity tops the list for repeat leave-takers', snippet: 'Employee leave-experience research consistently finds that returning leave-takers rank pay accuracy and continuity above the approval process itself.', source: 'SHRM', url: 'https://www.shrm.org' },
+        { type: 'Trend', title: 'Self-service pay estimates are becoming standard', snippet: 'More employers now expose real-time leave balance and projected pay during leave, cutting follow-up calls to HR.', source: 'WorldatWork', url: 'https://worldatwork.org' },
+        { type: 'Workplace news', title: 'Repeat filers still re-enter the same information', snippet: 'Even experienced leave-takers commonly report re-entering details they’ve already provided in a prior leave.', source: 'DMEC', url: 'https://dmec.org' }
       ] },
     { id: 'first', name: 'First-Time Employee', segment: 'Leave Takers', icon: 'first-time-employee.svg',
       desc: 'Has never taken leave before and has no idea where to start — what to do, what paperwork is needed, or what they’re entitled to.',
       jtbd: ['Understand what applies to my situation and what to do next','Always know what’s expected of me and by when','Know exactly what I need to provide, and confirm I’ve done it right','Make the right choice among my options without guessing'],
       insights: [
-        { type: "Guidance", title: "Family and Medical Leave Act Employee Guide", source: "U.S. Department of Labor", url: "https://www.dol.gov/agencies/whd/fmla/employee-guide" },
-        { type: "Guidance", title: "The Complete FMLA Guide: Employee Rights, Employer Responsibilities, and How to Apply", source: "SHRM", url: "https://www.shrm.org/topics-tools/workplace/complete-fmla-guide" },
-        { type: "Guidance", title: "Fact Sheet: The Family and Medical Leave Act (FMLA)", source: "A Better Balance", url: "https://www.abetterbalance.org/resources/fmla-factsheet" }
+        { type: 'Research', title: 'First-time filers stall without clear guidance', snippet: 'Research on leave intake shows first-time filers delay or abandon requests when unsure which leave type applies.', source: 'U.S. Department of Labor', url: 'https://www.dol.gov/agencies/whd/fmla' },
+        { type: 'Trend', title: 'Guided intake questionnaires are on the rise', snippet: 'More platforms now walk employees through a short questionnaire to identify the right leave type before they file.', source: 'DMEC', url: 'https://dmec.org' },
+        { type: 'Workplace news', title: 'FMLA eligibility awareness remains uneven', snippet: 'Workforce surveys find many employees are unsure whether they qualify for job-protected leave until they need it.', source: 'U.S. Department of Labor', url: 'https://www.dol.gov/agencies/whd/fmla' }
       ] },
     { id: 'peoplemgr', name: 'People Manager', segment: 'Leave Takers', icon: 'people-manager.svg',
       desc: 'Manages a team through a leave — submitting requests on their behalf, covering the gap, and planning the return to work — often without full visibility into the process.',
       jtbd: ['Know the moment something needs my attention for my team','See my team’s leave status at a glance, wherever I’m working','Know what’s mine to handle and when to bring in HR','Plan smooth coverage and a smooth return for my team'],
       insights: [
-        { type: "Guidance", title: "Confidentiality Is Key When Employees Are on FMLA or ADA Leave", source: "SHRM", url: "https://www.shrm.org/topics-tools/employment-law-compliance/confidentiality-key-employees-fmla-ada-leave" },
-        { type: "Workplace news", title: "After leave, return-to-work should be 'early, coordinated and sustained,' DOL says", source: "HR Dive", url: "https://www.hrdive.com/news/after-leave-return-to-work-approaches-should-be-early-coordinated-and-su/826866/" }
+        { type: 'Research', title: 'Coverage planning is managers’ top leave-related challenge', snippet: 'Surveys of people managers rank arranging team coverage as their biggest challenge when a report takes leave.', source: 'SHRM', url: 'https://www.shrm.org' },
+        { type: 'Trend', title: 'Manager-facing leave tools are a growing category', snippet: 'More HR platforms build manager views showing team leave status and coverage gaps without exposing medical details.', source: 'SHRM', url: 'https://www.shrm.org' },
+        { type: 'Workplace news', title: 'Manager training increasingly covers what not to ask', snippet: 'Employers train managers to route medical details to HR and keep leave conversations focused on logistics.', source: 'U.S. Equal Employment Opportunity Commission', url: 'https://www.eeoc.gov' }
       ] },
     { id: 'hradmin', name: 'HR Administrator', segment: 'Leave Managers', icon: 'hr-administrator.svg',
       desc: 'Configures and owns AbsenceSoft on behalf of the organization — policies, permissions, and staying compliant as the rules change.',
       jtbd: ['Set the system up to match how our organization actually runs leave','Control who can do what, confidently','Keep us compliant as the rules change'],
       insights: [
-        { type: "Guidance", title: "Navigating the Multistate Paid Leave Maze", source: "SHRM", url: "https://www.shrm.org/topics-tools/employment-law-compliance/navigating-multistate-paid-leave-maze" },
-        { type: "Report", title: "Mid-Year Paid Family Medical Leave Update – June 2026", source: "Littler", url: "https://www.littler.com/news-analysis/asap/mid-year-paid-family-medical-leave-update-june-2026" },
-        { type: "Guidance", title: "Employer Compliance Watchlist: Key State Laws Effective January 1, 2026", source: "Ogletree Deakins", url: "https://ogletree.com/insights-resources/blog-posts/employer-compliance-watchlist-key-state-laws-effective-january-1-2026/" }
+        { type: 'Research', title: 'Policy complexity scales faster than headcount', snippet: 'Research on multi-state employers shows leave policy administration grows more complex faster than the workforce itself.', source: 'SHRM', url: 'https://www.shrm.org' },
+        { type: 'Trend', title: 'Spreadsheets are being replaced by centralized config', snippet: 'Organizations are moving leave policy management out of spreadsheets into dedicated systems as law changes accelerate.', source: 'DMEC', url: 'https://dmec.org' },
+        { type: 'Workplace news', title: 'State paid-leave programs keep expanding', snippet: 'More states have introduced or expanded paid family and medical leave programs, each adding compliance requirements.', source: 'SHRM', url: 'https://www.shrm.org' }
       ] },
     { id: 'casemgr', name: 'Leave Case Manager', segment: 'Leave Managers', icon: 'leave-case-manager.svg',
       desc: 'Adjudicates leave cases end-to-end — checking certifications, communicating with employees, and juggling SLA deadlines across a full caseload.',
       jtbd: ['Stay on top of every deadline across my caseload','See a case’s full history without losing the compliance thread','Keep everyone informed and on time, without missing an SLA','Move a case forward end to end — leave, accommodation, and return'],
       insights: [
-        { type: "Guidance", title: "Getting Incomplete or Insufficient FMLA Medical Certifications? Request More Info", source: "DMEC", url: "https://dmec.org/resources/work-magazine/getting-incomplete-or-insufficient-fmla-medical-certifications-request-more-information/" },
-        { type: "Guidance", title: "Demystifying ADA Accommodations", source: "SHRM", url: "https://www.shrm.org/topics-tools/employment-law-compliance/shrm25-session-sneak-peak-demystifying-ada-accommodations" },
-        { type: "Trend", title: "Practical and Political Tipping Points for Workplace Accommodations", source: "Jackson Lewis", url: "https://www.jacksonlewis.com/insights/practical-and-political-tipping-points-workplace-accommodations" }
+        { type: 'Research', title: 'Certification follow-up is the biggest time sink', snippet: 'Absence management research repeatedly identifies medical certification tracking as case managers’ most time-consuming task.', source: 'DMEC', url: 'https://dmec.org' },
+        { type: 'Trend', title: 'Automated certification reminders are becoming standard', snippet: 'Leave platforms increasingly automate certification deadline reminders to reduce manual case tracking.', source: 'DMEC', url: 'https://dmec.org' },
+        { type: 'Workplace news', title: 'Case backlogs remain a persistent benchmark theme', snippet: 'Benchmarking surveys of leave and disability programs continue to cite open-case backlogs as an operational challenge.', source: 'DMEC', url: 'https://dmec.org' }
       ] },
     { id: 'support', name: 'Customer Support Analyst', segment: 'Support', icon: 'customer-support.svg',
       desc: 'Front-line analyst triaging 20-25 tickets at a time — reproducing customer-reported bugs and fielding product questions without much reliance on engineering.',
       jtbd: ['Get to the bottom of a reported issue without waiting on engineering','Understand what the system did without digging through raw logs','Find a trustworthy answer fast, not tribal knowledge'],
       insights: [
-        { type: "Guidance", title: "Adopting session replay for intuitive and proactive product teams", source: "LogRocket", url: "https://blog.logrocket.com/product-management/session-replay-guide/" },
-        { type: "Guidance", title: "Ticket deflection: Enhance your self-service with AI", source: "Zendesk", url: "https://www.zendesk.com/blog/help-center/self-service/ticket-deflection-currency-self-service/" },
-        { type: "Guidance", title: "Knowledge Base Guide: Examples, Templates & Best Practices", source: "Atlassian", url: "https://www.atlassian.com/itsm/knowledge-management/what-is-a-knowledge-base" }
+        { type: 'Research', title: 'Tier-1 support spends outsized time on reproduction', snippet: 'Support research finds front-line analysts spend more time reproducing a reported issue than resolving it when logging is sparse.', source: 'HDI', url: 'https://www.thinkhdi.com' },
+        { type: 'Trend', title: 'Self-service diagnostics replace developer hand-offs', snippet: 'More SaaS platforms give support direct access to session replay and structured logs so issues triage without engineering.', source: 'Zendesk', url: 'https://www.zendesk.com' },
+        { type: 'Workplace news', title: 'Documentation debt is a recurring support theme', snippet: 'Fast-growing SaaS orgs report support documentation lags product changes, pushing analysts to rely on tribal knowledge.', source: 'Zendesk', url: 'https://www.zendesk.com' }
       ] },
     { id: 'proserv', name: 'Professional Services Consultant', segment: 'Support', icon: 'professional-services.svg',
       desc: 'Gets customers live and keeps them there — configuring AbsenceSoft to their policies, wiring up integrations and data migration, then training their team to run it themselves.',
       jtbd: ['Get the customer live in their environment, smoothly','Connect the product to the systems the customer already runs on','Adapt the product when the standard fit isn’t enough','Move the customer’s history over safely','Set the customer’s team up to run it themselves'],
       insights: [
-        { type: "Report", title: "The State of Professional Services 2026", source: "TSIA", url: "https://www.tsia.com/blog/state-of-professional-services-2026-ai-economics" },
-        { type: "Guidance", title: "Customer Onboarding: Best Practices and Actionable Tips", source: "Gainsight", url: "https://www.gainsight.com/blog/customer-onboarding/" },
-        { type: "Report", title: "The State of Technology Services 2025", source: "TSIA", url: "https://www.tsia.com/blog/the-state-of-technology-services-2025" }
+        { type: 'Research', title: 'Time-to-value is the metric services orgs are measured on', snippet: 'Services research frames shortening time-to-first-value during implementation as the primary driver of adoption and renewal.', source: 'TSIA', url: 'https://www.tsia.com/blog/what-is-professional-services-a-quick-guide' },
+        { type: 'Trend', title: 'Implementations shift from custom code to configuration', snippet: 'Software services forecasts point to packaged, configuration-led delivery replacing bespoke build work.', source: 'Deloitte', url: 'https://www.deloitte.com/us/en/services/consulting/articles/future-of-software-professional-services.html' },
+        { type: 'Workplace news', title: 'Legacy data and integrations remain the usual risk', snippet: 'Practitioners cite migrating data from older systems and connecting existing databases as the steps most likely to slip a go-live.', source: 'Splunk', url: 'https://www.splunk.com/en_us/blog/learn/managed-vs-professional-services.html' }
       ] }
   ];
 
