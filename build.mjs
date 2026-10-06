@@ -38,7 +38,11 @@ function promptHidden(question) {
   return new Promise((resolve) => {
     let value = '';
     const onData = (chunk) => {
-      for (const ch of chunk.toString('utf8')) {
+      // Strip terminal escape sequences — notably the bracketed-paste markers
+      // (ESC[200~ … ESC[201~) many terminals wrap pasted text in. Left in, they
+      // make a pasted password differ from a typed one.
+      const text = chunk.toString('utf8').replace(/\x1b\[[0-9;]*[~A-Za-z]/g, '');
+      for (const ch of text) {
         if (ch === '\r' || ch === '\n') {
           process.stdin.setRawMode(false); process.stdin.pause(); process.stdin.off('data', onData);
           process.stdout.write('\n'); resolve(value); return;
@@ -91,15 +95,15 @@ function gatePage(payload) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Product Personas</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root { --accent: #096179; --ink: #172B4D; --ink-soft: #5E6C84; --line: #E4E7EC; --bg: #FFFFFF; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: "Lato", system-ui, sans-serif; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: "Figtree", system-ui, sans-serif; }
   .gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
   form { width: 100%; max-width: 380px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px 26px; box-shadow: 0 14px 30px rgba(9,30,66,.07); }
-  .eyebrow { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
-  h1 { font-family: "Poppins", sans-serif; font-size: 22px; margin: 0 0 6px; }
+  .eyebrow { font-family: "Figtree", sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+  h1 { font-family: "Figtree", sans-serif; font-size: 22px; margin: 0 0 6px; }
   p.sub { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.45; }
   label.f { display: block; font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
   input[type=password] { width: 100%; height: 42px; border: 1px solid #C9D1DB; border-radius: 9px; padding: 0 12px; font: inherit; font-size: 15px; }
