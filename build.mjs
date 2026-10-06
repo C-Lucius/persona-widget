@@ -100,8 +100,10 @@ function gatePage(payload) {
   :root { --accent: #096179; --ink: #172B4D; --ink-soft: #5E6C84; --line: #E4E7EC; --bg: #FFFFFF; }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: "Figtree", system-ui, sans-serif; }
-  .gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
-  form { width: 100%; max-width: 380px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px 26px; box-shadow: 0 14px 30px rgba(9,30,66,.07); }
+  /* Same one-border frame as the unlocked page, so the embed keeps its edge on a white page. */
+  html, body { height: 100%; }
+  .gate { height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px 16px; border: 1px solid #DCE2E9; border-radius: 16px; background: #F6F8FA; overflow: auto; }
+  form { width: 100%; max-width: 380px; background: #fff; border-radius: 16px; padding: 28px 26px; box-shadow: 0 1px 3px rgba(9,30,66,.08), 0 12px 28px rgba(9,30,66,.08); }
   .eyebrow { font-family: "Figtree", sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
   h1 { font-family: "Figtree", sans-serif; font-size: 22px; margin: 0 0 6px; }
   p.sub { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.45; }
