@@ -63,8 +63,11 @@ async function getPassword() {
 const b64 = (buf) => Buffer.from(buf).toString('base64');
 
 const plaintext = readFileSync(inPath, 'utf8');
-const password = await getPassword();
-if (password.length < 12) throw new Error('Use at least 12 characters — the page is public, so the password is the only protection.');
+// Input problems are expected (typos, short passwords): say so in one line
+// and leave index.html untouched, rather than dumping a stack trace.
+function fail(msg) { console.error(`${msg} Nothing was written — run it again.`); process.exit(1); }
+const password = await getPassword().catch((e) => fail(e.message));
+if (password.length < 12) fail('Use at least 12 characters — the page is public, so the password is the only protection.');
 
 const salt = crypto.getRandomValues(new Uint8Array(16));
 const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -90,7 +93,7 @@ function gatePage(payload) {
 <title>Product Personas</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root { --accent: #096179; --ink: #172B4D; --ink-soft: #5E6C84; --line: #E4E7EC; --bg: #EEF1F4; }
+  :root { --accent: #096179; --ink: #172B4D; --ink-soft: #5E6C84; --line: #E4E7EC; --bg: #FFFFFF; }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: "Lato", system-ui, sans-serif; }
   .gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
@@ -105,6 +108,8 @@ function gatePage(payload) {
   button { width: 100%; height: 42px; border: 0; border-radius: 9px; background: var(--accent); color: #fff; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
   button[disabled] { opacity: .6; cursor: progress; }
   .err { color: #B3261E; font-size: 13px; min-height: 18px; margin: 10px 0 0; }
+  .contact { font-size: 12.5px; color: var(--ink-soft); margin: 6px 0 0; padding-top: 14px; border-top: 1px solid var(--line); line-height: 1.45; }
+  .contact b { color: var(--accent); }
 </style>
 </head><body>
 <div class="gate">
@@ -117,6 +122,7 @@ function gatePage(payload) {
     <label class="row"><input type="checkbox" id="rm" checked> Remember me on this browser</label>
     <button type="submit" id="go">Unlock</button>
     <p class="err" id="err" role="alert"></p>
+    <p class="contact">Need access or the password? Contact Corey &mdash; <b>clucius@</b></p>
   </form>
 </div>
 <script>
